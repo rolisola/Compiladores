@@ -14,8 +14,7 @@ void E(void) { T(); R(); }
 void T(void) { F(); Q(); }
 
 // F -> '(' E ')' | DEC | OCT | HEX | FLT | ID
-void F(void)
-{
+void F(void) {
 	switch(lookahead) {
 		case '(':
 			match('('); E(); match(')');
@@ -34,8 +33,7 @@ void F(void)
 }
 
 // Q -> '*' F Q | '/' F Q | epsilon
-void Q(void)
-{
+void Q(void) {
 	switch(lookahead) {
 		case '*':
 			match('*'); F(); Q(); break;
@@ -47,8 +45,7 @@ void Q(void)
 }
 
 // R -> '+' T R | '-' T R | epsilon
-void R(void)
-{
+void R(void) {
 	switch(lookahead) {
 		case '+':
 			match('+'); T(); R(); break;
@@ -60,8 +57,7 @@ void R(void)
 }
 
 //////////////////////////// parser components /////////////////////////////////
-void match(int expected)
-{
+void match(int expected) {
 	if (lookahead == expected) {
 		lookahead = gettoken(source);
 	} else {
