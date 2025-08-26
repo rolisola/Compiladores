@@ -97,14 +97,186 @@ int isHEX(FILE *tape) {
 	return 0;
 }
 
-/*TODO: fazer funcao de float (completa) usando lexeme [ver slides 2 do professor]*/
+/*
+ * FIX [0-9]+\.[0-9]*|\.[0-9]+
+ * EXP [eE][+\-]?[0-9]+
+ * FLT FIX (?:EXP) | DEC EXP
+ */
 int isFLT(FILE *tape) {
+
+	if ( isdigit(lexeme[0] = getc(tape)) || lexeme[0] == '.') {
+
+		if (lexeme[0] == '.' && isdigit(lexeme[1] = getc(tape))) {
+
+			int i = 2;
+			while ( isdigit(lexeme[i] = getc(tape)) ) i++;
+
+			if (toupper(lexeme[i]) == 'E') {
+				if (((lexeme[i+1] = getc(tape)) == '+' || lexeme[i+1] == '-') && isdigit(lexeme[i+2] = getc(tape))) {
+					i = i+3;
+					while ( isdigit(lexeme[i] = getc(tape)) ) i++;
+					ungetc(lexeme[i], tape);
+					lexeme[i] = 0;
+					return FLT;
+				}
+				ungetc(lexeme[i+2], tape);
+				ungetc(lexeme[i+1], tape);
+			}
+
+			ungetc(lexeme[i], tape);
+			lexeme[i] = 0;
+			return FLT;
+		}
+		ungetc(lexeme[1], tape);
+
+		int i = 1;
+		while ( isdigit(lexeme[i] = getc(tape)) ) i++;
+		
+		if (lexeme[i] == '.') {
+			i++;
+			while ( isdigit(lexeme[i] = getc(tape)) ) i++;
+
+			if (toupper(lexeme[i]) == 'E') {
+				if (((lexeme[i+1] = getc(tape)) == '+' || lexeme[i+1] == '-') && isdigit(lexeme[i+2] = getc(tape))) {
+					i = i+3;
+					while ( isdigit(lexeme[i] = getc(tape)) ) i++;
+					ungetc(lexeme[i], tape);
+					lexeme[i] = 0;
+					return FLT;
+				}
+				ungetc(lexeme[i+2], tape);
+				ungetc(lexeme[i+1], tape);
+			}
+
+			ungetc(lexeme[i], tape);
+			lexeme[i] = 0;
+			return FLT;
+		}
+
+		if (toupper(lexeme[i]) == 'E') {
+
+			if (((lexeme[i+1] = getc(tape)) == '+' || lexeme[i+1] == '-') && isdigit(lexeme[i+2] = getc(tape))) {
+				i = i+3;
+				while ( isdigit(lexeme[i] = getc(tape)) ) i++;
+				ungetc(lexeme[i], tape);
+				lexeme[i] = 0;
+				return FLT;
+			}
+			ungetc(lexeme[i+2], tape);
+			ungetc(lexeme[i+1], tape);
+		}
+
+		while ( i>=1 ) {
+			ungetc(lexeme[i], tape);
+			i--;
+		}
+	}
+
+	ungetc(lexeme[0], tape);
+	lexeme[0] = 0;
 	return 0;
 }
 
 /*TODO: fazer funcao de numero romano usando lexeme [ver slides 2 do professor]*/
 int isROMAN(FILE *tape) {
-	return 0;
+
+	int i = 0;
+	int exit = 0;
+
+	//Milhar
+	if (toupper(lexeme[i] = getc(tape)) == 'M') {
+		i++;
+		int j = 0;
+		while(toupper(lexeme[i] = getc(tape)) == 'M' && j<2) {i++; j++;} //Como ele pega da fita antes de comparar j, sempre devolvemos
+	}
+	ungetc(lexeme[i], tape);
+
+	//Centenas
+	if (toupper(lexeme[i] = getc(tape)) == 'D' || toupper(lexeme[i]) == 'C') {
+
+		if (toupper(lexeme[i]) == 'C') {
+			i++;
+
+			if (toupper(lexeme[i] = getc(tape)) == 'M' || toupper(lexeme[i]) == 'D' || toupper(lexeme[i]) == 'C') {
+
+				if (toupper(lexeme[i]) == 'C' && toupper(lexeme[i+1] = getc(tape)) == 'C') {
+					i=i+2;
+					lexeme[i] = getc(tape);
+				} else {
+					i++;
+				}
+			}
+
+		} else {
+			i++;
+			int j = 0;
+			while(toupper(lexeme[i] = getc(tape)) == 'C' && j<3) {i++; j++;} //Como ele pega da fita antes de comparar j, sempre devolvemos
+		}
+	}
+	ungetc(lexeme[i], tape);
+
+	//Dezenas
+	if (toupper(lexeme[i] = getc(tape)) == 'L' || toupper(lexeme[i]) == 'X') {
+
+		if (toupper(lexeme[i]) == 'X') {
+			i++;
+
+			if (toupper(lexeme[i] = getc(tape)) == 'C' || toupper(lexeme[i]) == 'L' || toupper(lexeme[i]) == 'X') {
+
+				if (toupper(lexeme[i]) == 'X' && toupper(lexeme[i+1] = getc(tape)) == 'X') {
+					i=i+2;
+					lexeme[i] = getc(tape);
+				} else {
+					i++;
+				}
+			}
+			
+		} else {
+			i++;
+			int j = 0;
+			while(toupper(lexeme[i] = getc(tape)) == 'X' && j<3) {i++; j++;} //Como ele pega da fita antes de comparar j, sempre devolvemos
+		}
+	}
+	ungetc(lexeme[i], tape);
+
+	//Unidades
+	if (toupper(lexeme[i] = getc(tape)) == 'V' || toupper(lexeme[i]) == 'I') {
+
+		if (toupper(lexeme[i]) == 'I') {
+			i++;
+
+			if (toupper(lexeme[i] = getc(tape)) == 'X' || toupper(lexeme[i]) == 'V' || toupper(lexeme[i]) == 'I') {
+
+				if (toupper(lexeme[i]) == 'I' && toupper(lexeme[i+1] = getc(tape)) == 'I') {
+					i=i+2;
+					lexeme[i] = getc(tape);
+				} else {
+					i++;
+				}
+			}
+			
+		} else {
+			i++;
+			int j = 0;
+			while(toupper(lexeme[i] = getc(tape)) == 'I' && j<3) {i++; j++;} //Como ele pega da fita antes de comparar j, sempre devolvemos
+		}
+	}
+	ungetc(lexeme[i], tape);
+
+	int result = ROMAN;
+	
+	//Se tiver um alfanumerico ou digito na frente, significa ID, ou seja, temos que devolver tudo.
+	if (isalpha(lexeme[i]=getc(tape)) || isdigit(lexeme[i]) || i==0) {
+		result = 0;
+		while(i>0) {
+			ungetc(lexeme[i], tape);
+			i--;
+		}
+	}
+	ungetc(lexeme[i], tape);
+
+	lexeme[i]=0;
+	return result;
 }
 
 // Skip spaces
