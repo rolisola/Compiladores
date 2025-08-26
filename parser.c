@@ -27,6 +27,8 @@ void F(void) {
 			match(HEX); break;
 		case FLT:
 			match(FLT); break;
+		case ROMAN:
+			match(ROMAN); break;
 		default:
 			match(ID);
 	}
