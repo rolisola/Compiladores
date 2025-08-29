@@ -5,6 +5,7 @@ enum {
 	DEC,
 	OCT,
 	HEX,
+	EE,
     FLT,
 	ROMAN,
 };

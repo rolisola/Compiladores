@@ -1,10 +1,10 @@
 HDIR = .
 CFLAGS = -g -I$(HDIR)
 
-mybc: lexer.o main.o parser.o
+mybc: lexer.o main.o parser.o # adicao de "<arquivos>.o" para automatizar a criação de mybc
 	$(CC) $(CFLAGS) $^ -o $@
 
-lexer.o:
+lexer.o: 
 	$(CC) $(CFLAGS) -c lexer.c -o $@
 
 main.o:
@@ -19,7 +19,8 @@ clean:
 mostlyclean: clean
 	$(RM) *~
 
-targz: # pra entregar pro prof
+compact: # para entregar ao professor
 	tar zcvf mybc.tar.gz Makefile *.[ch]
-# pra extrair:
-# 	tar zxvf mybc.tar.gz
+
+extract: # para extrair do professor
+	tar zxvf mybc.tar.gz

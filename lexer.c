@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <ctype.h>
 #include <lexer.h>
 
@@ -9,48 +10,82 @@ char lexeme[MAXLEN+1];
  * ID = [A-Za-z][A-Za-z0-9]*
  */
 int isID(FILE *tape) {
-	if ( isalpha(lexeme[0] = getc(tape)) ) {
-		int i = 1;
-		while ( isalnum( lexeme[1] = getc(tape) ) ) i++;
-		ungetc(lexeme[i], tape);
-		lexeme[i] = 0;
-		return ID;
+	int i = 0;
+	int token = 0;
+	if ( isalpha(lexeme[i] = getc(tape)) ) {
+		i++;
+		while ( isalnum( lexeme[i] = getc(tape) ) ) i++;
+		token = ID;
 	}
 
-	ungetc(lexeme[0], tape);
-	lexeme[0] = 0;
-	return 0;
+	ungetc(lexeme[i], tape);
+	lexeme[i] = 0;
+	return token;
 }
 
 /*
  * DEC = [1-9][0-9]* | '0'
- *                           ------------------------------------------
- *                          |                      digit               |
- *                          |                    --------              |
- *                          |                   |        |             |
- *               digit      |     not zero      V        |  epsilon    V
- * -->(is DEC)--------->(is ZERO)---------->(isdigit)-------------->((DEC))
- *       |
- *       | epsilon
- *       |
- *       V
- *     ((0))
  */
 int isDEC(FILE *tape) {
-	if ( isdigit(lexeme[0] = getc(tape)) ) {
-		if (lexeme[0] == '0') {
-			lexeme[1] = 0;
+	int i = 0;
+	int token = 0;
+	if ( isdigit(lexeme[i] = getc(tape)) ) {
+		if (lexeme[i] == '0') {
+			lexeme[i+1] = 0;
 			return DEC;
 		}
-		int i = 1;
+		i++;
 		while ( isdigit(lexeme[i] = getc(tape)) ) i++;
-		ungetc(lexeme[i], tape);
-		lexeme[i]=0;
-		return DEC;
+		token = DEC;
 	}
 
-	ungetc(lexeme[0], tape);
-	lexeme[0] = 0;
+	ungetc(lexeme[i], tape);
+	lexeme[i] = 0;
+	return token;
+}
+
+/*
+ * EXP [eE][+\-]?[0-9]+
+ */
+// TODO: Testar funcao
+int isEE(FILE *tape) {
+
+	int i = strlen(lexeme);
+	int hassignal = 0;
+	int token = 0;
+
+	if (toupper(lexeme[i] = getc(tape)) == 'E') {
+		i++;
+		if ( (lexeme[i] = getc(tape)) == '+' || lexeme[i] == '-') {
+			hassignal++;
+			i++;
+			lexeme[i] = getc(tape);
+		}
+
+		if ( isdigit(lexeme[i]) ) {
+			i++;
+			while ( isdigit(lexeme[i] = getc(tape)) ) i++;
+			token = EE;
+		}
+
+		if (hassignal && token != EE) {
+			ungetc(lexeme[i], tape);
+			i--;
+		}
+	}
+
+	ungetc(lexeme[i], tape);
+	lexeme[i] = 0;
+	return token;
+}
+
+/*
+ * FIX [0-9]+\.[0-9]*|\.[0-9]+
+ * FLT FIX (?:EE) | DEC EE
+ */
+//TODO: Pegar dos arquivos do professor (juntar ponto fixo/flutuante e decimal)
+int isNUM() {
+
 	return 0;
 }
 
@@ -75,8 +110,6 @@ int isOCT(FILE *tape) {
 
 /*
  * HEX = '0'[Xx][0-9A-Fa-f]+
- *
- * isxdigit == [0-9A-Fa-f]
  */
 int isHEX(FILE *tape) {
 	if ( (lexeme[0] = getc(tape)) == '0' ) {
@@ -97,87 +130,7 @@ int isHEX(FILE *tape) {
 	return 0;
 }
 
-/*
- * FIX [0-9]+\.[0-9]*|\.[0-9]+
- * EXP [eE][+\-]?[0-9]+
- * FLT FIX (?:EXP) | DEC EXP
- */
-int isFLT(FILE *tape) {
-
-	if ( isdigit(lexeme[0] = getc(tape)) || lexeme[0] == '.') {
-
-		if (lexeme[0] == '.' && isdigit(lexeme[1] = getc(tape))) {
-
-			int i = 2;
-			while ( isdigit(lexeme[i] = getc(tape)) ) i++;
-
-			if (toupper(lexeme[i]) == 'E') {
-				if (((lexeme[i+1] = getc(tape)) == '+' || lexeme[i+1] == '-') && isdigit(lexeme[i+2] = getc(tape))) {
-					i = i+3;
-					while ( isdigit(lexeme[i] = getc(tape)) ) i++;
-					ungetc(lexeme[i], tape);
-					lexeme[i] = 0;
-					return FLT;
-				}
-				ungetc(lexeme[i+2], tape);
-				ungetc(lexeme[i+1], tape);
-			}
-
-			ungetc(lexeme[i], tape);
-			lexeme[i] = 0;
-			return FLT;
-		}
-		ungetc(lexeme[1], tape);
-
-		int i = 1;
-		while ( isdigit(lexeme[i] = getc(tape)) ) i++;
-		
-		if (lexeme[i] == '.') {
-			i++;
-			while ( isdigit(lexeme[i] = getc(tape)) ) i++;
-
-			if (toupper(lexeme[i]) == 'E') {
-				if (((lexeme[i+1] = getc(tape)) == '+' || lexeme[i+1] == '-') && isdigit(lexeme[i+2] = getc(tape))) {
-					i = i+3;
-					while ( isdigit(lexeme[i] = getc(tape)) ) i++;
-					ungetc(lexeme[i], tape);
-					lexeme[i] = 0;
-					return FLT;
-				}
-				ungetc(lexeme[i+2], tape);
-				ungetc(lexeme[i+1], tape);
-			}
-
-			ungetc(lexeme[i], tape);
-			lexeme[i] = 0;
-			return FLT;
-		}
-
-		if (toupper(lexeme[i]) == 'E') {
-
-			if (((lexeme[i+1] = getc(tape)) == '+' || lexeme[i+1] == '-') && isdigit(lexeme[i+2] = getc(tape))) {
-				i = i+3;
-				while ( isdigit(lexeme[i] = getc(tape)) ) i++;
-				ungetc(lexeme[i], tape);
-				lexeme[i] = 0;
-				return FLT;
-			}
-			ungetc(lexeme[i+2], tape);
-			ungetc(lexeme[i+1], tape);
-		}
-
-		while ( i>=1 ) {
-			ungetc(lexeme[i], tape);
-			i--;
-		}
-	}
-
-	ungetc(lexeme[0], tape);
-	lexeme[0] = 0;
-	return 0;
-}
-
-/*TODO: fazer funcao de numero romano usando lexeme [ver slides 2 do professor]*/
+//TODO: Testar e Comentar números romanos
 int isROMAN(FILE *tape) {
 
 	int i = 0;
@@ -187,7 +140,7 @@ int isROMAN(FILE *tape) {
 	if (toupper(lexeme[i] = getc(tape)) == 'M') {
 		i++;
 		int j = 0;
-		while(toupper(lexeme[i] = getc(tape)) == 'M' && j<2) {i++; j++;} //Como ele pega da fita antes de comparar j, sempre devolvemos
+		while(toupper(lexeme[i] = getc(tape)) == 'M' && j<2) {i++; j++;}
 	}
 	ungetc(lexeme[i], tape);
 
@@ -210,7 +163,7 @@ int isROMAN(FILE *tape) {
 		} else {
 			i++;
 			int j = 0;
-			while(toupper(lexeme[i] = getc(tape)) == 'C' && j<3) {i++; j++;} //Como ele pega da fita antes de comparar j, sempre devolvemos
+			while(toupper(lexeme[i] = getc(tape)) == 'C' && j<3) {i++; j++;}
 		}
 	}
 	ungetc(lexeme[i], tape);
@@ -234,7 +187,7 @@ int isROMAN(FILE *tape) {
 		} else {
 			i++;
 			int j = 0;
-			while(toupper(lexeme[i] = getc(tape)) == 'X' && j<3) {i++; j++;} //Como ele pega da fita antes de comparar j, sempre devolvemos
+			while(toupper(lexeme[i] = getc(tape)) == 'X' && j<3) {i++; j++;}
 		}
 	}
 	ungetc(lexeme[i], tape);
@@ -258,7 +211,7 @@ int isROMAN(FILE *tape) {
 		} else {
 			i++;
 			int j = 0;
-			while(toupper(lexeme[i] = getc(tape)) == 'I' && j<3) {i++; j++;} //Como ele pega da fita antes de comparar j, sempre devolvemos
+			while(toupper(lexeme[i] = getc(tape)) == 'I' && j<3) {i++; j++;}
 		}
 	}
 	ungetc(lexeme[i], tape);
@@ -292,13 +245,12 @@ int gettoken(FILE *source) {
 	skipspaces(source);
 
 	if ( (token = isROMAN(source)) ) return token;
-	if ( (token = isFLT(source)) ) return token;
 	if ( (token = isID(source)) ) return token;
 	if ( (token = isHEX(source)) ) return token;
 	if ( (token = isOCT(source)) ) return token;
-	if ( (token = isDEC(source)) ) return token;
+	if ( (token = isNUM(source)) ) return token;
 
-	// return an ASCII token
+	// retorna o caractere em ASCII
 	token = getc(source);
 	return token;
 }

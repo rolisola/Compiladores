@@ -59,11 +59,13 @@ void R(void) {
 }
 
 //////////////////////////// parser components /////////////////////////////////
+
+//TODO: Adicionar contador de linha e coluna | Aprimorar mensagem de erro
 void match(int expected) {
 	if (lookahead == expected) {
 		lookahead = gettoken(source);
 	} else {
-		fprintf(stderr, "token mismatch\n");
+		fprintf(stderr, "Erro de Sintaxe (Ln 0, Cl 0). Esperava-se %c, ao invés de %c.\n", expected, lookahead);
 		exit(ERRTOKEN);
 	}
 }
