@@ -19,8 +19,11 @@ clean:
 mostlyclean: clean
 	$(RM) *~
 
-compact: # para entregar ao professor
+compact: clean # para entregar ao professor $(RM) mybc.tar.gz
+	rm -rf professor
 	tar zcvf mybc.tar.gz Makefile *.[ch]
 
 extract: # para extrair do professor
-	tar zxvf mybc.tar.gz
+	mkdir -p professor
+	tar zxvf mybc.tar.gz -C ./professor
+	mv mybc.tar.gz ./professor

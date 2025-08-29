@@ -84,9 +84,42 @@ int isEE(FILE *tape) {
  * FLT FIX (?:EE) | DEC EE
  */
 //TODO: Pegar dos arquivos do professor (juntar ponto fixo/flutuante e decimal)
-int isNUM() {
-
-	return 0;
+int isNUM(FILE* tape) {
+	int token = isDEC(tape);
+	if (token == DEC) {
+		int i = strlen(lexeme);
+		if ( (lexeme[i] = getc(tape)) == '.' ) {
+			i++;
+			while ( isdigit( lexeme[i] = getc(tape) ) ) i++;
+			ungetc(lexeme[i], tape);
+			lexeme[i] = 0;
+			token = FLT;
+		} else {
+			ungetc(lexeme[i], tape);
+			lexeme[i] = 0;
+		}
+	} else {
+		if ( (lexeme[0] = getc(tape)) == '.' ) {
+			if ( isdigit( lexeme[1] = getc(tape) ) ) {
+				token = FLT;
+				int i = 2;
+				while ( isdigit( lexeme[i] = getc(tape) ) ) i++;
+			} else {
+				ungetc(lexeme[1], tape);
+				ungetc(lexeme[0], tape);
+				lexeme[0] = 0;
+				return 0; // not a number
+			}
+		} else {
+			ungetc(lexeme[0], tape);
+			lexeme[0] = 0;
+			return 0; // not a number
+		}
+	}
+	
+	if (isEE(tape)) {
+		token = FLT;
+	}
 }
 
 /*
@@ -251,6 +284,7 @@ int gettoken(FILE *source) {
 	if ( (token = isNUM(source)) ) return token;
 
 	// retorna o caractere em ASCII
-	token = getc(source);
+	lexeme[0] = (token = getc(source));
+	lexeme[1] = 0;
 	return token;
 }
