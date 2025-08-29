@@ -16,11 +16,11 @@ parser.o:
 clean:
 	$(RM) *.o
 
-mostlyclean: clean
-	$(RM) *~
-
-compact: clean # para entregar ao professor $(RM) mybc.tar.gz
+veryclean: clean
+	$(RM) *~ mybc
 	rm -rf professor
+
+compact: veryclean # para entregar ao professor
 	tar zcvf mybc.tar.gz Makefile *.[ch]
 
 extract: # para extrair do professor
