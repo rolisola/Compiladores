@@ -6,13 +6,17 @@
 
 char lexeme[MAXLEN+1];
 
-/* Versão extendida de identificador Pascal
- * ID = [A-Za-z][A-Za-z0-9]*
+/* Versão extendida de identificador Pascal.
+ * Regex:		ID = [A-Za-z][A-Za-z0-9]*
+ * Parâmetros:	(FILE*) tape
+ * Retorno:		(int) token
  */
 int isID(FILE *tape) {
+
 	int i = 0;
 	int token = 0;
-	if ( isalpha(lexeme[i] = getc(tape)) ) {
+
+	if ( isalpha(lexeme[i] = getc(tape)) ) {	//Se o primeiro caractere for uma letra, considera ID
 		i++;
 		while ( isalnum( lexeme[i] = getc(tape) ) ) i++;
 		token = ID;
@@ -23,15 +27,19 @@ int isID(FILE *tape) {
 	return token;
 }
 
-/*
- * DEC = [1-9][0-9]* | '0'
+/* Averigua se o número é decimal.
+ * Regex:		DEC = [1-9][0-9]* | '0'
+ * Parâmetros:	(FILE*) tape
+ * Retorno:		(int) token
  */
 int isDEC(FILE *tape) {
+
 	int i = 0;
 	int token = 0;
+
 	if ( isdigit(lexeme[i] = getc(tape)) ) {
 		if (lexeme[i] == '0') {
-			lexeme[i+1] = 0;
+			lexeme[i+1] = 0;	//Caso venha 0, ja retorna o numero
 			return DEC;
 		}
 		i++;
@@ -44,30 +52,34 @@ int isDEC(FILE *tape) {
 	return token;
 }
 
-/*
- * EXP [eE][+\-]?[0-9]+
+/* Averigua se existe a notação exponencial (notação científica).
+ * Regex:		EXP [eE][+\-]?[0-9]+
+ * Parâmetros:	(FILE*) tape
+ * Retorno:		(int) token
  */
-// TODO: Testar funcao
+// TODO: Testar Otimizacoes
 int isEE(FILE *tape) {
 
-	int i = strlen(lexeme);
-	int hassignal = 0;
 	int token = 0;
+	int hassignal = 0;
+	int i = strlen(lexeme);
 
 	if (toupper(lexeme[i] = getc(tape)) == 'E') {
 		i++;
-		if ( (lexeme[i] = getc(tape)) == '+' || lexeme[i] == '-') {
+		if ( (lexeme[i] = getc(tape)) == '+' || lexeme[i] == '-') { //Le o sinal e faz uma nova leitura (por ele ser algo opcional)
 			hassignal++;
 			i++;
 			lexeme[i] = getc(tape);
 		}
 
+		//Avalia se temos digitos apos o E
 		if ( isdigit(lexeme[i]) ) {
 			i++;
 			while ( isdigit(lexeme[i] = getc(tape)) ) i++;
 			token = EE;
 		}
 
+		//Caso nao seja EE e tenha vindo sinal, devolve este
 		if (hassignal && token != EE) {
 			ungetc(lexeme[i], tape);
 			i--;
@@ -79,53 +91,55 @@ int isEE(FILE *tape) {
 	return token;
 }
 
-/*
- * FIX [0-9]+\.[0-9]*|\.[0-9]+
- * FLT FIX (?:EE) | DEC EE
+/* Averigua se o número é decimal ou ponto flutuante.
+ * Regex:		FLT [0-9]+\.[0-9]*|\.[0-9]+ (?:EE) | DEC EE
+ * Parâmetros:	(FILE*) tape
+ * Retorno:		(int) token
  */
-//TODO: Pegar dos arquivos do professor (juntar ponto fixo/flutuante e decimal)
+//TODO: Testar otimizacoes
 int isNUM(FILE* tape) {
+
+	int i = strlen(lexeme);
 	int token = isDEC(tape);
+
 	if (token == DEC) {
-		int i = strlen(lexeme);
+		
 		if ( (lexeme[i] = getc(tape)) == '.' ) {
 			i++;
 			while ( isdigit( lexeme[i] = getc(tape) ) ) i++;
-			ungetc(lexeme[i], tape);
-			lexeme[i] = 0;
 			token = FLT;
-		} else {
-			ungetc(lexeme[i], tape);
-			lexeme[i] = 0;
 		}
+		ungetc(lexeme[i], tape);
+		lexeme[i] = 0;
 	} else {
-		if ( (lexeme[0] = getc(tape)) == '.' ) {
-			if ( isdigit( lexeme[1] = getc(tape) ) ) {
+		if ( (lexeme[i] = getc(tape)) == '.') {
+			i++;
+			if ( isdigit( lexeme[i] = getc(tape) ) ) {
 				token = FLT;
-				int i = 2;
+				i++;
 				while ( isdigit( lexeme[i] = getc(tape) ) ) i++;
 			} else {
-				ungetc(lexeme[1], tape);
-				ungetc(lexeme[0], tape);
-				lexeme[0] = 0;
-				return 0; // not a number
+				ungetc(lexeme[i], tape);
+				i--;
 			}
-		} else {
-			ungetc(lexeme[0], tape);
-			lexeme[0] = 0;
-			return 0; // not a number
 		}
+		ungetc(lexeme[i], tape);
+		lexeme[i] = 0;
 	}
 	
-	if (isEE(tape)) {
+	if (token && isEE(tape))
 		token = FLT;
-	}
+
+	return token;
 }
 
-/*
- * OCT = '0'[0-7]+
+/* Averigua se o número é octal.
+ * Regex:		OCT = '0'[0-7]+
+ * Parâmetros:	(FILE*) tape
+ * Retorno:		(int) token
  */
 int isOCT(FILE *tape) {
+
 	if ((lexeme[0] = getc(tape)) == '0') {
 		if ((lexeme[1] = getc(tape)) >= '0' && lexeme[1] <= '7') {
 			int i = 2;
@@ -141,8 +155,10 @@ int isOCT(FILE *tape) {
 	return 0;
 }
 
-/*
- * HEX = '0'[Xx][0-9A-Fa-f]+
+/* Averigua se o número é hexadecimal.
+ * Regex:		HEX = '0'[Xx][0-9A-Fa-f]+
+ * Parâmetros:	(FILE*) tape
+ * Retorno:		(int) token
  */
 int isHEX(FILE *tape) {
 	if ( (lexeme[0] = getc(tape)) == '0' ) {
@@ -163,7 +179,12 @@ int isHEX(FILE *tape) {
 	return 0;
 }
 
-//TODO: Testar e Comentar números romanos
+/* Averigua se o número é romano.
+ * Regex:		M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})
+ * Parâmetros:	(FILE*) tape
+ * Retorno:		(int) token
+ */
+//TODO: Testar e Corrigir números Romanos
 int isROMAN(FILE *tape) {
 
 	int i = 0;
@@ -265,13 +286,20 @@ int isROMAN(FILE *tape) {
 	return result;
 }
 
-// Skip spaces
+/* Ignora espaços em branco.
+ * Parâmetros:	(FILE*) tape
+ * Retorno:		(void)
+ */
 void skipspaces(FILE *tape) {
 	int head;
 	while ( isspace(head = getc(tape)) );
 	ungetc(head, tape);
 }
 
+/* Obtém token possível através de demais autômatos.
+ * Parâmetros:	(FILE*) source
+ * Retorno:		(int) token
+ */
 int gettoken(FILE *source) {
 	int token;
 

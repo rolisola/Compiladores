@@ -1,7 +1,8 @@
 HDIR = .
 CFLAGS = -g -I$(HDIR)
 
-mybc: lexer.o main.o parser.o # adicao de "<arquivos>.o" para automatizar a criação de mybc
+# Link-edita os realocáveis
+mybc: lexer.o main.o parser.o # automação dos realocáveis para acelerar a criação de mybc
 	$(CC) $(CFLAGS) $^ -o $@
 
 lexer.o: 
@@ -13,17 +14,21 @@ main.o:
 parser.o:
 	$(CC) $(CFLAGS) -c parser.c -o $@
 
+# Limpa os realocáveis
 clean:
 	$(RM) *.o
 
+# Limpa os realocáveis, os temporários, o executável e a pasta "professor", se houver
 veryclean: clean
 	$(RM) *~ mybc
 	rm -rf professor
 
-compact: veryclean # para entregar ao professor
+# Limpa e comprime o projeto para enviar ao professor
+compact: veryclean
 	tar zcvf mybc.tar.gz Makefile *.[ch]
 
-extract: # para extrair do professor
+# Cria uma pasta chamada "professor", extrai os arquivos do comprimido e o move para a pasta criada
+extract:
 	mkdir -p professor
 	tar zxvf mybc.tar.gz -C ./professor
 	mv mybc.tar.gz ./professor

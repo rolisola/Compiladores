@@ -1,3 +1,4 @@
+//Definições:
 #define MAXLEN 128
 
 enum {
