@@ -1,21 +1,20 @@
 //Definições:
 #define ERRTOKEN -0x10000000
 
-//Declarações:
+//Declarações de variáveis:
 extern int lookahead;
 extern char lexeme[]; //definido no lexer
+
 extern int line;      //definido no lexer
 extern int column;    //definido no lexer
 
 extern FILE *source;  //definido na main
 
-extern void match(int);
-
+//Declarações de funções e procedimentos
 extern int gettoken(FILE *); //definido no lexer
 
 extern void E(void);
-extern void T(void);
-extern void F(void);
-extern void Q(void);
-extern void R(void);
+extern void match(int);
+extern void print_token(int input, FILE* out);
+extern void print_lexeme(void);
 

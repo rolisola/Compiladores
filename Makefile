@@ -14,21 +14,28 @@ main.o:
 parser.o:
 	$(CC) $(CFLAGS) -c parser.c -o $@
 
+# Usado para depuração de erros em tokens
+debug: lexer.o main.o debug_parser.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+debug_parser.o:
+	$(CC) $(CFLAGS) -DDEBUG -c parser.c -o $@
+
 # Limpa os realocáveis
 clean:
 	$(RM) *.o
 
-# Limpa os realocáveis, os temporários, o executável e a pasta "professor", se houver
+# Limpa os realocáveis, os temporários, o executável e a pasta "extracted", se houver
 veryclean: clean
-	$(RM) *~ mybc
-	rm -rf professor
+	$(RM) *~ mybc debug
+	rm -rf extracted
 
 # Limpa e comprime o projeto para enviar ao professor
 compact: veryclean
 	tar zcvf mybc.tar.gz Makefile *.[ch]
 
-# Cria uma pasta chamada "professor", extrai os arquivos do comprimido e o move para a pasta criada
+# Cria uma pasta chamada "extracted", extrai os arquivos do comprimido e o move para a pasta criada
 extract:
-	mkdir -p professor
-	tar zxvf mybc.tar.gz -C ./professor
-	mv mybc.tar.gz ./professor
+	mkdir -p extracted
+	tar zxvf mybc.tar.gz -C ./extracted
+	mv mybc.tar.gz ./extracted

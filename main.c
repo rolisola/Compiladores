@@ -9,6 +9,8 @@ int main(void) {
 
 	E();
 
-	putchar('\n');
+	#ifndef DEBUG
+		putchar('\n');
+	#endif
 	return 0;
 }

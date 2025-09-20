@@ -18,7 +18,8 @@ int isID(FILE *tape) {
 	int i = 0;
 	int token = 0;
 
-	if ( isalpha(lexeme[i] = getc(tape)) ) {	//Se o primeiro caractere for uma letra, considera ID
+	//Se o primeiro caractere for uma letra, considera ID
+	if ( isalpha(lexeme[i] = getc(tape)) ) {	
 		i++;
 		while ( isalnum( lexeme[i] = getc(tape) ) ) i++;
 		token = ID;
@@ -40,11 +41,15 @@ int isDEC(FILE *tape) {
 	int token = 0;
 
 	if ( isdigit(lexeme[i] = getc(tape)) ) {
+
+		//Caso venha 0, ja retorna o numero
 		if (lexeme[i] == '0') {
-			lexeme[i+1] = 0;	//Caso venha 0, ja retorna o numero
+			lexeme[i+1] = 0;
 			return DEC;
 		}
 		i++;
+
+		//Lê a sequência de digitos
 		while ( isdigit(lexeme[i] = getc(tape)) ) i++;
 		token = DEC;
 	}
@@ -67,7 +72,9 @@ int isEE(FILE *tape) {
 
 	if (toupper(lexeme[i] = getc(tape)) == 'E') {
 		i++;
-		if ( (lexeme[i] = getc(tape)) == '+' || lexeme[i] == '-') { //Le o sinal e faz uma nova leitura (por ele ser algo opcional)
+
+		//Lê o sinal e faz uma nova leitura (por ele ser algo opcional)
+		if ( (lexeme[i] = getc(tape)) == '+' || lexeme[i] == '-') {
 			hassignal++;
 			i++;
 			lexeme[i] = getc(tape);
@@ -104,6 +111,7 @@ int isNUM(FILE* tape) {
 
 	if (token == DEC) {
 		
+		//Promoção a float após ter um '.'
 		if ( (lexeme[i] = getc(tape)) == '.' ) {
 			i++;
 			while ( isdigit( lexeme[i] = getc(tape) ) ) i++;
@@ -112,6 +120,8 @@ int isNUM(FILE* tape) {
 		ungetc(lexeme[i], tape);
 		lexeme[i] = 0;
 	} else {
+
+		//Caso venha '.', pode ser float (exemplo .14)
 		if ( (lexeme[i] = getc(tape)) == '.') {
 			i++;
 			if ( isdigit( lexeme[i] = getc(tape) ) ) {
@@ -127,6 +137,7 @@ int isNUM(FILE* tape) {
 		lexeme[i] = 0;
 	}
 	
+	//Se for um decimal, e tiver notação exponencial, se torna float
 	if (token && isEE(tape))
 		token = FLT;
 
@@ -140,6 +151,7 @@ int isNUM(FILE* tape) {
  */
 int isOCT(FILE *tape) {
 
+	//Caso comece com 0, é candidato a octal
 	if ((lexeme[0] = getc(tape)) == '0') {
 		if ((lexeme[1] = getc(tape)) >= '0' && lexeme[1] <= '7') {
 			int i = 2;
@@ -161,6 +173,8 @@ int isOCT(FILE *tape) {
  * Retorno:		(int) token
  */
 int isHEX(FILE *tape) {
+
+	//Se contém 0x, é candidato a hexadecimal
 	if ( (lexeme[0] = getc(tape)) == '0' ) {
 		if ( toupper(lexeme[1] = getc(tape)) == 'X' ) {
 			if ( isxdigit(lexeme[2] = getc(tape)) ) {
@@ -184,13 +198,12 @@ int isHEX(FILE *tape) {
  * Parâmetros:	(FILE*) tape
  * Retorno:		(int) token
  */
-//TODO: Corrigir números Romanos (problema no tamanho capturado)
 int isROMAN(FILE *tape) {
 
 	int i = 0;
 	int exit = 0;
 
-	//Milhar
+	//Milhar (de 0 a 3 M)
 	if (toupper(lexeme[i] = getc(tape)) == 'M') {
 		i++;
 		int j = 0;
@@ -198,15 +211,16 @@ int isROMAN(FILE *tape) {
 	}
 	ungetc(lexeme[i], tape);
 
-	//Centenas --> Revisar Código
+	//Centenas (caso tenha C ou D no número)
 	if (toupper(lexeme[i] = getc(tape)) == 'D' || toupper(lexeme[i]) == 'C') {
 
 		if (toupper(lexeme[i]) == 'C') {
 			i++;
 
+			//Resolve casos de CM, CD e CCC
 			if (toupper(lexeme[i] = getc(tape)) == 'M' || toupper(lexeme[i]) == 'D' || toupper(lexeme[i]) == 'C') {
 
-				if (toupper(lexeme[i]) == 'C' && toupper(lexeme[i+1] = getc(tape)) == 'C') {
+				if (toupper(lexeme[i+1] = getc(tape)) == 'C' && toupper(lexeme[i]) == 'C') {
 					i=i+2;
 					lexeme[i] = getc(tape);
 				} else {
@@ -216,21 +230,24 @@ int isROMAN(FILE *tape) {
 
 		} else {
 			i++;
+
+			//Resolve casos de D até DCCC
 			int j = 0;
 			while(toupper(lexeme[i] = getc(tape)) == 'C' && j<3) {i++; j++;}
 		}
 	}
 	ungetc(lexeme[i], tape);
 
-	//Dezenas --> Revisar Código
+	//Dezenas (Caso tenha X ou L no número)
 	if (toupper(lexeme[i] = getc(tape)) == 'L' || toupper(lexeme[i]) == 'X') {
 
 		if (toupper(lexeme[i]) == 'X') {
 			i++;
 
+			//Resolve casos de XC, XL e XXX
 			if (toupper(lexeme[i] = getc(tape)) == 'C' || toupper(lexeme[i]) == 'L' || toupper(lexeme[i]) == 'X') {
 
-				if (toupper(lexeme[i]) == 'X' && toupper(lexeme[i+1] = getc(tape)) == 'X') {
+				if (toupper(lexeme[i+1] = getc(tape)) == 'X' && toupper(lexeme[i]) == 'X') {
 					i=i+2;
 					lexeme[i] = getc(tape);
 				} else {
@@ -240,21 +257,24 @@ int isROMAN(FILE *tape) {
 			
 		} else {
 			i++;
+
+			//Resolve casos de L até LXXX
 			int j = 0;
 			while(toupper(lexeme[i] = getc(tape)) == 'X' && j<3) {i++; j++;}
 		}
 	}
 	ungetc(lexeme[i], tape);
 
-	//Unidades --> Revisar Código
+	//Unidades (Caso tenha I e V no número)
 	if (toupper(lexeme[i] = getc(tape)) == 'V' || toupper(lexeme[i]) == 'I') {
 
 		if (toupper(lexeme[i]) == 'I') {
 			i++;
 
+			//Resolve casos de IX, IV e III
 			if (toupper(lexeme[i] = getc(tape)) == 'X' || toupper(lexeme[i]) == 'V' || toupper(lexeme[i]) == 'I') {
 
-				if (toupper(lexeme[i]) == 'I' && toupper(lexeme[i+1] = getc(tape)) == 'I') {
+				if (toupper(lexeme[i+1] = getc(tape)) == 'I' && toupper(lexeme[i]) == 'I') {
 					i=i+2;
 					lexeme[i] = getc(tape);
 				} else {
@@ -264,6 +284,8 @@ int isROMAN(FILE *tape) {
 			
 		} else {
 			i++;
+
+			//Resolve casos de V até VIII
 			int j = 0;
 			while(toupper(lexeme[i] = getc(tape)) == 'I' && j<3) {i++; j++;}
 		}
@@ -286,7 +308,7 @@ int isROMAN(FILE *tape) {
 	return result;
 }
 
-/* Ignora espaços em branco.
+/* Ignora espaços em branco e conta linhas/colunas.
  * Parâmetros:	(FILE*) tape
  * Retorno:		(void)
  */
@@ -327,7 +349,7 @@ int gettoken(FILE *source) {
 			if ( !(token = isHEX(source)) ) {
 				if ( !(token = isOCT(source)) ) {
 					if ( !(token = isNUM(source)) ) {
-						// retorno do caractere em ASCII
+						//Retorno do caractere em ASCII
 						lexeme[0] = (token = getc(source));
 						lexeme[1] = 0;
 					}
