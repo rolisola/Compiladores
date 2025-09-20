@@ -9,5 +9,6 @@ int main(void) {
 
 	E();
 
+	putchar('\n');
 	return 0;
 }

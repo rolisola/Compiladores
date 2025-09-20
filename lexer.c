@@ -5,6 +5,8 @@
 #include <lexer.h>
 
 char lexeme[MAXLEN+1];
+int line = 1;
+int column = 1;
 
 /* Versão extendida de identificador Pascal.
  * Regex:		ID = [A-Za-z][A-Za-z0-9]*
@@ -57,7 +59,6 @@ int isDEC(FILE *tape) {
  * Parâmetros:	(FILE*) tape
  * Retorno:		(int) token
  */
-// TODO: Testar Otimizacoes
 int isEE(FILE *tape) {
 
 	int token = 0;
@@ -96,11 +97,10 @@ int isEE(FILE *tape) {
  * Parâmetros:	(FILE*) tape
  * Retorno:		(int) token
  */
-//TODO: Testar otimizacoes
 int isNUM(FILE* tape) {
 
-	int i = strlen(lexeme);
 	int token = isDEC(tape);
+	int i = strlen(lexeme);
 
 	if (token == DEC) {
 		
@@ -184,7 +184,7 @@ int isHEX(FILE *tape) {
  * Parâmetros:	(FILE*) tape
  * Retorno:		(int) token
  */
-//TODO: Testar e Corrigir números Romanos
+//TODO: Corrigir números Romanos (problema no tamanho capturado)
 int isROMAN(FILE *tape) {
 
 	int i = 0;
@@ -198,7 +198,7 @@ int isROMAN(FILE *tape) {
 	}
 	ungetc(lexeme[i], tape);
 
-	//Centenas
+	//Centenas --> Revisar Código
 	if (toupper(lexeme[i] = getc(tape)) == 'D' || toupper(lexeme[i]) == 'C') {
 
 		if (toupper(lexeme[i]) == 'C') {
@@ -222,7 +222,7 @@ int isROMAN(FILE *tape) {
 	}
 	ungetc(lexeme[i], tape);
 
-	//Dezenas
+	//Dezenas --> Revisar Código
 	if (toupper(lexeme[i] = getc(tape)) == 'L' || toupper(lexeme[i]) == 'X') {
 
 		if (toupper(lexeme[i]) == 'X') {
@@ -246,7 +246,7 @@ int isROMAN(FILE *tape) {
 	}
 	ungetc(lexeme[i], tape);
 
-	//Unidades
+	//Unidades --> Revisar Código
 	if (toupper(lexeme[i] = getc(tape)) == 'V' || toupper(lexeme[i]) == 'I') {
 
 		if (toupper(lexeme[i]) == 'I') {
@@ -292,7 +292,24 @@ int isROMAN(FILE *tape) {
  */
 void skipspaces(FILE *tape) {
 	int head;
-	while ( isspace(head = getc(tape)) );
+	while ( isspace(head = getc(tape)) ) {
+
+		switch(head) {
+			case'\r':
+				column = 1;
+				break;
+
+			case'\t':
+				column += TAB_SPACE;
+				break;
+			case'\n':
+				column = 1;
+				line++; 
+				break;
+			default:
+				column++;
+		}
+	}
 	ungetc(head, tape);
 }
 
@@ -305,14 +322,20 @@ int gettoken(FILE *source) {
 
 	skipspaces(source);
 
-	if ( (token = isROMAN(source)) ) return token;
-	if ( (token = isID(source)) ) return token;
-	if ( (token = isHEX(source)) ) return token;
-	if ( (token = isOCT(source)) ) return token;
-	if ( (token = isNUM(source)) ) return token;
+	if ( !(token = isROMAN(source))) {
+		if ( !(token = isID(source)) ) {
+			if ( !(token = isHEX(source)) ) {
+				if ( !(token = isOCT(source)) ) {
+					if ( !(token = isNUM(source)) ) {
+						// retorno do caractere em ASCII
+						lexeme[0] = (token = getc(source));
+						lexeme[1] = 0;
+					}
+				}
+			}
+		}
+	}
 
-	// retorna o caractere em ASCII
-	lexeme[0] = (token = getc(source));
-	lexeme[1] = 0;
+	column += strlen(lexeme);
 	return token;
 }
