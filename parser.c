@@ -37,15 +37,13 @@ void print_token(int input, FILE* out) {
 	}
 }
 
-void debug_token() {
-	printf("->[");
-	print_token(lookahead, stdout);
-	printf("]\n");
-}
-
 void print_lexeme() {
 	printf("%s ", lexeme);
-	// debug_token();			//depuracao
+
+	// Depuração:
+	// printf("->[");
+	// print_token(lookahead, stdout);
+	// printf("]\n");
 }
 
 // E é o símbolo inicial da gramática LL(1) de expressões simplificadas
