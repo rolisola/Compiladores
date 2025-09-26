@@ -35,39 +35,39 @@ void E(void) {
 		T_BEGIN {
 			FACTOR {
 				case '(':
-					/*Ação Semântica*/print_lexeme();/**/
+					/*Ação Semântica 1*/print_lexeme(objcode);/**/
 					match('(');
 					E();
-					/*Ação Semântica*/print_lexeme();/**/
+					/*Ação Semântica 2*/print_lexeme(objcode);/**/
 					match(')');
 					break;
 
 				case DEC:
-					/*Ação Semântica*/print_lexeme();/**/
+					/*Ação Semântica 3*/print_lexeme(objcode);/**/
 					match(DEC); break;
 
 				case OCT:
-					/*Ação Semântica*/print_lexeme();/**/
+					/*Ação Semântica 4*/print_lexeme(objcode);/**/
 					match(OCT); break;
 
 				case HEX:
-					/*Ação Semântica*/print_lexeme();/**/
+					/*Ação Semântica 5*/print_lexeme(objcode);/**/
 					match(HEX); break;
 
 				case FLT:
-					/*Ação Semântica*/print_lexeme();/**/
+					/*Ação Semântica 6*/print_lexeme(objcode);/**/
 					match(FLT); break;
 
 				case ROMAN:
-					/*Ação Semântica*/print_lexeme();/**/
+					/*Ação Semântica 7*/print_lexeme(objcode);/**/
 					match(ROMAN); break;
 
 				default:
-					/*Ação Semântica*/print_lexeme();/**/
+					/*Ação Semântica 8*/print_lexeme(objcode);/**/
 					match(ID);
 			}
 
-			/*Ação Semântica*/
+			/*Ação Semântica 9*/
 			if(is_multsymbol) {
 				printf("%c ", is_multsymbol);
 				is_multsymbol = 0;
@@ -75,20 +75,20 @@ void E(void) {
 			/**/
 
 			if(lookahead == '*' || lookahead == '/') {
-				/*Ação Semântica*/ is_multsymbol = lookahead;/**/
+				/*Ação Semântica 10*/ is_multsymbol = lookahead;/**/
 				match(lookahead);
 			}
 
 		} T_END;
 
-		/*Ação Semântica*/
+		/*Ação Semântica 11*/
 		if (is_negsymbol) {
 			printf("%c ", is_negsymbol);
 			is_negsymbol = 0;
 		}
 		/**/
 
-		/*Ação Semântica*/
+		/*Ação Semântica 12*/
 		if(is_addsymbol) {
 			printf("%c ", is_addsymbol);
 			is_addsymbol = 0;
@@ -96,7 +96,7 @@ void E(void) {
 		/**/
 
 		if(lookahead == '+' || lookahead == '-') {
-			/*Ação Semântica*/is_addsymbol = lookahead;/**/
+			/*Ação Semântica 13*/is_addsymbol = lookahead;/**/
 			match(lookahead);
 		}
 
@@ -161,13 +161,13 @@ void print_token(int input, FILE* out) {
  * Parâmetros:	(void)
  * Retorno:		(void)
  */
-void print_lexeme(void) {
-	printf("%s ", lexeme);
+void print_lexeme(FILE* out) {
+	fprintf(out, "%s ", lexeme);
 
 	// Depuração de tokens, caso desejado:
 	#ifdef DEBUG
 		printf("->[");
-		print_token(lookahead, stdout);
+		print_token(lookahead, out);
 		printf("]\n");
 	#endif
 }
