@@ -11,6 +11,46 @@
 #define E_END while(is_addsymbol)
 #define FACTOR switch(lookahead)
 
+void mybc(void) {
+
+	cmd();
+
+	while(lookahead != EOF) {
+		if (lookahead == '\n' || lookahead == ';') {
+			fprintf(objcode,"%lg\n", acc);
+			cmd();
+		}
+	}
+	match(EOF);
+}
+
+void cmd(void) {
+	switch(lookahead) {
+
+		case EXIT:
+		case QUIT:
+			exit(0);
+
+		case DEC:
+		case FLT:
+		case HEX:
+		case OCT:
+		case ROMAN:
+		case ID:
+		case '+':
+		case '-':
+		case '(':
+			E();
+			#ifndef DEBUG
+				putchar('\n');
+			#endif
+
+		default:
+			;
+	}
+}
+
+
 /* Função inicial do analisador sintático, aprimorada pelo diagrama sintático. 
  * Parâmetros:	(void)
  * Retorno:		(void)
@@ -43,7 +83,7 @@ void E(void) {
 					break;
 
 				case DEC:
-					/*Ação Semântica 3*/print_lexeme(objcode);/**/
+					/*Ação Semântica 3*/acc = atoi(lexeme);/**/
 					match(DEC); break;
 
 				case OCT:
@@ -55,7 +95,7 @@ void E(void) {
 					match(HEX); break;
 
 				case FLT:
-					/*Ação Semântica 6*/print_lexeme(objcode);/**/
+					/*Ação Semântica 6*/acc = atof(lexeme);/**/
 					match(FLT); break;
 
 				case ROMAN:
@@ -69,34 +109,46 @@ void E(void) {
 
 			/*Ação Semântica 9*/
 			if(is_multsymbol) {
-				printf("%c ", is_multsymbol);
+				if (lookahead == '*') {
+					stack[sp] *= acc;
+				} else {
+					stack[sp] /= acc;
+				}
+				acc = stack[sp--];
 				is_multsymbol = 0;
 			}
 			/**/
 
 			if(lookahead == '*' || lookahead == '/') {
 				/*Ação Semântica 10*/ is_multsymbol = lookahead;/**/
+				/*Ação Semântica 11*/ stack[++sp] = acc;/**/
 				match(lookahead);
 			}
 
 		} T_END;
 
-		/*Ação Semântica 11*/
+		/*Ação Semântica 12*/
 		if (is_negsymbol) {
-			printf("%c ", is_negsymbol);
+			acc = -acc;
 			is_negsymbol = 0;
 		}
 		/**/
 
-		/*Ação Semântica 12*/
+		/*Ação Semântica 13*/
 		if(is_addsymbol) {
-			printf("%c ", is_addsymbol);
+			if (lookahead == '+') {
+				stack[sp] += acc;
+			} else {
+				stack[sp] -= acc;
+			}
+			acc = stack[sp--];
 			is_addsymbol = 0;
 		}
 		/**/
 
 		if(lookahead == '+' || lookahead == '-') {
-			/*Ação Semântica 13*/is_addsymbol = lookahead;/**/
+			/*Ação Semântica 14*/is_addsymbol = lookahead;/**/
+			/*Ação Semântica 15*/ stack[++sp] = acc;/**/
 			match(lookahead);
 		}
 
@@ -105,7 +157,11 @@ void E(void) {
 
 //////////////////////////// parser components /////////////////////////////////
 
-int lookahead; //Vê o próximo token de nosso fluxo
+int sp = -1; //Ponteiro da Pilha
+double acc = 0; //Pseudo-Registrador
+int lookahead = 0; //Vê o próximo token de nosso fluxo
+double stack[STACKSIZE]; //Pilha para armazenamento
+
 
 /* Verifica se o token esperado está em lookahead e lê o próximo token.
  * Parâmetros:	(int) input, (FILE*) out
@@ -128,6 +184,7 @@ void match(int expected) {
 	lookahead = gettoken(source);
 }
 
+//TODO: Transformar em tabela de tokens e acessar como tokens[lookahead-ID]
 /* Imprime o valor do token em um arquivo de saída.
  * Parâmetros:	(int) input, (FILE*) out
  * Retorno:		(void)

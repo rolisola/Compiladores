@@ -1,5 +1,5 @@
 //Definições:
-#define ERRTOKEN -0x10000000
+#define STACKSIZE 1024
 
 //Declarações de variáveis:
 extern int lookahead;

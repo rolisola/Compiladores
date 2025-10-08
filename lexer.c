@@ -27,6 +27,16 @@ int isID(FILE *tape) {
 
 	ungetc(lexeme[i], tape);
 	lexeme[i] = 0;
+
+	//Caso seja um comando reservado, retorna o respectivo token
+	if ( strcmp(lexeme,"exit") == 0 ) {
+		token = EXIT;
+	}
+
+	if ( strcmp(lexeme,"quit") == 0 || strcmp(lexeme,"q") == 0) {
+		token = QUIT;
+	}
+
 	return token;
 }
 
@@ -330,6 +340,11 @@ void skipspaces(FILE *tape) {
 				break;
 			default:
 				column++;
+		}
+
+		//Permite capturar o caractere '\n' para uso futuro
+		if (head == '\n') {
+			break;
 		}
 	}
 	ungetc(head, tape);
