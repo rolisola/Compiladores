@@ -10,4 +10,6 @@ enum {
 	EE,
     FLT,
 	ROMAN,
+	EXIT,
+	QUIT,
 };

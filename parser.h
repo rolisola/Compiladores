@@ -1,5 +1,5 @@
 //Definições:
-#define ERRTOKEN -0x10000000
+#define STACKSIZE 1024
 
 //Declarações de variáveis:
 extern int lookahead;
@@ -9,6 +9,7 @@ extern int line;      //definido no lexer
 extern int column;    //definido no lexer
 
 extern FILE *source;  //definido na main
+extern FILE *objcode; //definido na main
 
 //Declarações de funções e procedimentos
 extern int gettoken(FILE *); //definido no lexer
