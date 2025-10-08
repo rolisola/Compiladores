@@ -1,5 +1,6 @@
 //Definições:
 #define STACKSIZE 1024
+#define TOKEN_WORDSIZE 6
 
 //Declarações de variáveis:
 extern int lookahead;

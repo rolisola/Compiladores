@@ -350,6 +350,7 @@ void skipspaces(FILE *tape) {
 	ungetc(head, tape);
 }
 
+//TODO: Ignorar setinhas (esquerda e direita), e dar utilidade para setinhas cima e baixo
 /* Obtém token possível através de demais autômatos.
  * Parâmetros:	(FILE*) source
  * Retorno:		(int) token
