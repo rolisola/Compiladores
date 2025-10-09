@@ -80,14 +80,14 @@ void E(void) {
 					/*Ação Semântica 1*/acc = atoi(lexeme);/**/
 					match(DEC); break;
 
-				//TODO: Substituir ação semântica pela conversão de octal para double
+				//TODO: Testar conversão
 				case OCT:
-					/*Ação Semântica 2*/print_lexeme(objcode);/**/
+					/*Ação Semântica 2*/acc = (double) strtol(lexeme,NULL,0);/**/
 					match(OCT); break;
 
-				//TODO: Substituir ação semântica pela conversão de hexadecimal para double
+				//TODO: Testar conversão
 				case HEX:
-					/*Ação Semântica 3*/print_lexeme(objcode);/**/
+					/*Ação Semântica 3*/acc = (double) strtol(lexeme,NULL,0);/**/
 					match(HEX); break;
 
 				case FLT:

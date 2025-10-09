@@ -6,6 +6,12 @@
 extern int lookahead;
 extern char lexeme[]; //definido no lexer
 
+extern int sp;
+extern double stack[STACKSIZE];
+
+extern double acc;
+extern char token_string[][TOKEN_WORDSIZE];
+
 extern int line;      //definido no lexer
 extern int column;    //definido no lexer
 
