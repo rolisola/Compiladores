@@ -7,9 +7,14 @@
 #include <stdlib.h>
 #include <main.h>
 #include <signal.h>
+#include <setjmp.h>
+
 
 FILE *source;
 FILE *objcode;
+
+//Variável global que 'longjmp' usará em parser.c
+jmp_buf error_recovery_point;
 
 //TODO: Testar função
 //Tratamento do Sinal do Ctrl+C

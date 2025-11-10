@@ -3,6 +3,7 @@
 #include <string.h>
 #include <lexer.h>
 #include <parser.h>
+#include <setjmp.h>
 
 //Criação de macros para facilitar a abstração no nosso analisador sintático
 #define T_BEGIN do
@@ -11,18 +12,37 @@
 #define E_END while(is_addsymbol)
 #define FACTOR switch(lookahead)
 
-//TODO: Adicionar Comentários e testar função
+//Permite que este arquivo use a variável definida no main.c
+extern jmp_buf error_recovery_point;
+
 void mybc(void) {
 
-	cmd();
+    while (lookahead != EOF) {
 
-	while(lookahead != EOF) {
-		if (lookahead == '\n' || lookahead == ';') {
-			fprintf(objcode,"%lg\n", acc);
-			cmd();
-		}
-	}
-	match(EOF);
+        //Tenta processar a linha
+        if (setjmp(error_recovery_point) == 0) {
+            
+            cmd();
+
+            if (lookahead == '\n' || lookahead == ';') {
+                fprintf(objcode, "%lg\n", acc);
+                match(lookahead);
+            }
+        }
+        
+        //"catch": O match() deu erro (longjmp)
+        else {
+            // Limpa o buffer de entrada até o fim da linha
+            int c;
+            while ((c = fgetc(source)) != '\n' && c != EOF);
+            if (c == EOF) break;
+
+            // Prepara o parser para a próxima linha
+            lookahead = gettoken(source);
+            sp = -1;
+            acc = 0;
+        }
+    }
 }
 
 //TODO: Adicionar Comentários e testar função
@@ -161,19 +181,31 @@ int lookahead = 0; //Vê o próximo token de nosso fluxo
 double stack[STACKSIZE]; //Pilha para armazenamento
 char token_string[][TOKEN_WORDSIZE] = {"ID","DEC","OCT","HEX","EE","FLT","ROMAN","EXIT","QUIT"}; //Tabela de conversão de tokens
 
-//TODO: Dar um jeito para que, após o erro, tenha um reset no prompt para voltar à função CMD sem executar tais contas/instruções
-/* Verifica se o token esperado está em lookahead e lê o próximo token.
- * Parâmetros:	(int) input, (FILE*) out
- * Retorno:		(void)
- */
-void match(int expected) {
+/*
+ IMPLEMENTAÇÃO DE RECUPERAÇÃO DE ERRO (setjmp/longjmp)
+ Parser agora implementa recuperação de erro usando setjmp/longjmp
+ 
+ -match() (em parser.c): chama longjmp() ("throw") ao detectar um erro de sintaxe.
 
-	//Caso não seja o esperado, imprime um erro.
-	if (lookahead != expected) {
-		perror("Erro de Sintaxe (Ln %d, Cl %d). Esperava-se ", line, (int)(column - strlen(lexeme)));
-		perror("%s, ao invés de %s.\n", (expected>=ID) ? token_string[expected-ID] : ((char[]){expected,'\0'}), (lookahead>=ID) ? token_string[lookahead-ID] : ((char[]){lookahead,'\0'}));
+ -mybc() (em parser.c): usa setjmp() ("catch") para capturar o "throw", limpar o buffer de entrada e resetar o estado.
+ 
+ - Arq: main.c: Apenas define a 'jmp_buf' global.
+  */
+
+void match(int expected) {
+	if (lookahead == expected) {
+			lookahead = gettoken(source);
+		} 
+	else {
+		//Imprime o erro
+		fprintf(stderr, "Erro de Sintaxe (Ln %d, Cl %d). ", line, (int)(column - strlen(lexeme)));
+		const char* expected_str = (expected >= ID) ? token_string[expected - ID] : (char[]){expected, '\0'};
+		const char* lookahead_str = (lookahead >= ID) ? token_string[lookahead - ID] : (char[]){lookahead, '\0'};
+		fprintf(stderr, "Espera-se '%s', ao inves de '%s'.\n", expected_str, lookahead_str);
+
+		//Salto de erro; vai pular para 'if(setjmp...)' no main.c
+		longjmp(error_recovery_point, 1); 
 	}
-	lookahead = gettoken(source);
 }
 
 //TODO: Remover essa função se não tiver mais utilidade no código
