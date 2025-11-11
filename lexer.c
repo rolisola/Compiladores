@@ -27,6 +27,16 @@ int isID(FILE *tape) {
 
 	ungetc(lexeme[i], tape);
 	lexeme[i] = 0;
+
+	//Caso seja um comando reservado, retorna o respectivo token
+	if ( strcmp(lexeme,"exit") == 0 ) {
+		token = EXIT;
+	}
+
+	if ( strcmp(lexeme,"quit") == 0 || strcmp(lexeme,"q") == 0) {
+		token = QUIT;
+	}
+
 	return token;
 }
 
@@ -201,26 +211,25 @@ int isHEX(FILE *tape) {
 int isROMAN(FILE *tape) {
 
 	int i = 0;
-	int exit = 0;
 
 	//Milhar (de 0 a 3 M)
-	if (toupper(lexeme[i] = getc(tape)) == 'M') {
+	if ((lexeme[i] = getc(tape)) == 'M') {
 		i++;
 		int j = 0;
-		while(toupper(lexeme[i] = getc(tape)) == 'M' && j<2) {i++; j++;}
+		while(lexeme[i] = getc(tape) == 'M' && j<2) {i++; j++;}
 	}
 	ungetc(lexeme[i], tape);
 
 	//Centenas (caso tenha C ou D no número)
-	if (toupper(lexeme[i] = getc(tape)) == 'D' || toupper(lexeme[i]) == 'C') {
+	if ((lexeme[i] = getc(tape)) == 'D' || lexeme[i] == 'C') {
 
-		if (toupper(lexeme[i]) == 'C') {
+		if (lexeme[i] == 'C') {
 			i++;
 
 			//Resolve casos de CM, CD e CCC
-			if (toupper(lexeme[i] = getc(tape)) == 'M' || toupper(lexeme[i]) == 'D' || toupper(lexeme[i]) == 'C') {
+			if ((lexeme[i] = getc(tape)) == 'M' || lexeme[i] == 'D' || lexeme[i] == 'C') {
 
-				if (toupper(lexeme[i+1] = getc(tape)) == 'C' && toupper(lexeme[i]) == 'C') {
+				if ((lexeme[i+1] = getc(tape)) == 'C' && lexeme[i] == 'C') {
 					i=i+2;
 					lexeme[i] = getc(tape);
 				} else {
@@ -233,21 +242,21 @@ int isROMAN(FILE *tape) {
 
 			//Resolve casos de D até DCCC
 			int j = 0;
-			while(toupper(lexeme[i] = getc(tape)) == 'C' && j<3) {i++; j++;}
+			while(lexeme[i] = getc(tape) == 'C' && j<3) {i++; j++;}
 		}
 	}
 	ungetc(lexeme[i], tape);
 
 	//Dezenas (Caso tenha X ou L no número)
-	if (toupper(lexeme[i] = getc(tape)) == 'L' || toupper(lexeme[i]) == 'X') {
+	if ((lexeme[i] = getc(tape)) == 'L' || lexeme[i] == 'X') {
 
-		if (toupper(lexeme[i]) == 'X') {
+		if (lexeme[i] == 'X') {
 			i++;
 
 			//Resolve casos de XC, XL e XXX
-			if (toupper(lexeme[i] = getc(tape)) == 'C' || toupper(lexeme[i]) == 'L' || toupper(lexeme[i]) == 'X') {
+			if ((lexeme[i] = getc(tape)) == 'C' || lexeme[i] == 'L' || lexeme[i] == 'X') {
 
-				if (toupper(lexeme[i+1] = getc(tape)) == 'X' && toupper(lexeme[i]) == 'X') {
+				if ((lexeme[i+1] = getc(tape)) == 'X' && lexeme[i] == 'X') {
 					i=i+2;
 					lexeme[i] = getc(tape);
 				} else {
@@ -260,21 +269,21 @@ int isROMAN(FILE *tape) {
 
 			//Resolve casos de L até LXXX
 			int j = 0;
-			while(toupper(lexeme[i] = getc(tape)) == 'X' && j<3) {i++; j++;}
+			while((lexeme[i] = getc(tape)) == 'X' && j<3) {i++; j++;}
 		}
 	}
 	ungetc(lexeme[i], tape);
 
 	//Unidades (Caso tenha I e V no número)
-	if (toupper(lexeme[i] = getc(tape)) == 'V' || toupper(lexeme[i]) == 'I') {
+	if ((lexeme[i] = getc(tape)) == 'V' || lexeme[i] == 'I') {
 
-		if (toupper(lexeme[i]) == 'I') {
+		if (lexeme[i] == 'I') {
 			i++;
 
 			//Resolve casos de IX, IV e III
-			if (toupper(lexeme[i] = getc(tape)) == 'X' || toupper(lexeme[i]) == 'V' || toupper(lexeme[i]) == 'I') {
+			if ((lexeme[i] = getc(tape)) == 'X' || lexeme[i] == 'V' || lexeme[i] == 'I') {
 
-				if (toupper(lexeme[i+1] = getc(tape)) == 'I' && toupper(lexeme[i]) == 'I') {
+				if ((lexeme[i+1] = getc(tape)) == 'I' && lexeme[i] == 'I') {
 					i=i+2;
 					lexeme[i] = getc(tape);
 				} else {
@@ -287,7 +296,7 @@ int isROMAN(FILE *tape) {
 
 			//Resolve casos de V até VIII
 			int j = 0;
-			while(toupper(lexeme[i] = getc(tape)) == 'I' && j<3) {i++; j++;}
+			while((lexeme[i] = getc(tape)) == 'I' && j<3) {i++; j++;}
 		}
 	}
 	ungetc(lexeme[i], tape);
@@ -331,10 +340,16 @@ void skipspaces(FILE *tape) {
 			default:
 				column++;
 		}
+
+		//Permite capturar o caractere '\n' para uso futuro
+		if (head == '\n') {
+			break;
+		}
 	}
 	ungetc(head, tape);
 }
 
+//TODO: Ignorar setinhas (esquerda e direita), e dar utilidade para setinhas cima e baixo
 /* Obtém token possível através de demais autômatos.
  * Parâmetros:	(FILE*) source
  * Retorno:		(int) token

@@ -27,7 +27,7 @@ clean:
 
 # Limpa os realocáveis, os temporários, o executável e a pasta "extracted", se houver
 veryclean: clean
-	$(RM) *~ mybc debug
+	$(RM) *~ mybc debug debug_parser.o
 	rm -rf extracted
 
 # Limpa e comprime o projeto para enviar ao professor
