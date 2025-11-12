@@ -12,7 +12,8 @@ extern int sp;
 extern double stack[STACKSIZE];
 
 extern double acc;
-extern int to_print;
+extern int errors;
+extern int answers;
 extern char token_string[][TOKEN_WORDSIZE];
 
 extern int line;      //definido no lexer

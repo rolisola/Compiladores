@@ -37,6 +37,10 @@ int isID(FILE *tape) {
 		token = QUIT;
 	}
 
+	if ( strcmp(lexeme,"ans") == 0 ||  strcmp(lexeme,"ANS") == 0 ) {
+		token = ANS;
+	}
+
 	return token;
 }
 

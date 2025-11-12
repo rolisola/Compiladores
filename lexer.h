@@ -12,4 +12,5 @@ enum {
 	ROMAN,
 	EXIT,
 	QUIT,
+	ANS,
 };
