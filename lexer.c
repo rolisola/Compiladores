@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <tokens.h>
 #include <lexer.h>
 
 //Variáveis globais
@@ -317,6 +318,32 @@ int isROMAN(FILE *tape) {
 	return result;
 }
 
+/* Averigua se tem o operador de atribuição.
+ * Parâmetros:	(FILE*) tape
+ * Retorno:		(int) token
+ */
+int isASGN(FILE* tape) {
+
+	int token = 0;
+	int i = 0;
+
+	//Se for :=, é considerado operador de atribuição
+	if ((lexeme[i] = getc(tape)) == ':') {
+		i++;
+
+		if ((lexeme[i] = getc(tape)) == '=') {
+			token = ASGN;
+			lexeme[++i] = getc(tape);
+		} else {
+			ungetc(lexeme[i--],tape);
+		}
+	}
+
+	ungetc(lexeme[i],tape);
+	lexeme[i] = 0;
+	return token;
+}
+
 /* Ignora espaços em branco e setas, além de contar linhas/colunas.
  * Parâmetros:	(FILE*) tape
  * Retorno:		(void)
@@ -377,14 +404,16 @@ int gettoken(FILE *source) {
 	skipspaces(source);
 
 	//Averigua, de maneira identada, cada autômato
-	if ( !(token = isROMAN(source))) {
-		if ( !(token = isID(source)) ) {
-			if ( !(token = isHEX(source)) ) {
-				if ( !(token = isOCT(source)) ) {
-					if ( !(token = isNUM(source)) ) {
-						//Retorno do caractere em ASCII
-						lexeme[0] = (token = getc(source));
-						lexeme[1] = 0;
+	if ( !(token = isASGN(source)) ) {
+		if ( !(token = isROMAN(source)) ) {
+			if ( !(token = isID(source)) ) {
+				if ( !(token = isHEX(source)) ) {
+					if ( !(token = isOCT(source)) ) {
+						if ( !(token = isNUM(source)) ) {
+							//Retorno do caractere em ASCII
+							lexeme[0] = (token = getc(source));
+							lexeme[1] = 0;
+						}
 					}
 				}
 			}

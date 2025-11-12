@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <lexer.h>
+#include <tokens.h>
 #include <parser.h>
+
+/*********** Macros ***********/
 
 //Criação de macros para facilitar a abstração no nosso analisador sintático
 #define T_BEGIN do
@@ -11,21 +14,31 @@
 #define E_END while(is_addsymbol)
 #define FACTOR switch(lookahead)
 
-//TODO: Revisar arquivo .h e ver se itens estão coerentes/comentados
-//TODO: Adicionar Comentários e testar função
+////////////////////////////////// Parser ///////////////////////////////////////
+
+/* Função de inicialização da calculadora.
+ * Parâmentros: (void)
+ * Retorno:		(void)
+ */
 void mybc(void) {
 
 	cmd();
 
+	//Loop principal do programa, que termina se receber EOF (Ctrl+D) ou por comandos do cmd()
 	while (lookahead != EOF) {
 		
+		//Em caso de termino de instruções, avalia a impressão e a contagem de linhas
 		if (lookahead == '\n' || lookahead == ';') {
+
+			//Se não tiver erros, imprime o resultado, salva o ans e altera a quantidade de respostas
 			if (!errors) {
 				fprintf(objcode,"%lg\n", acc);
+				ans = acc;
 				answers++;
-				errors--; // Deixa o erro como -1 para evitar repetições de respostas
+				errors--;
 			}
 	
+			//Caso tenha terminado a linha, checa quantas respostas e erros tiveram para compensar na contagem linhas/colunas
 			if (lookahead == '\n' && (errors >0 || answers >0)) {
 				errors>0? (line += errors) : 0;
 				answers>0? (line += answers) : 0;
@@ -34,19 +47,26 @@ void mybc(void) {
 			}
 		}
 
+		//Avança a leitura do lookahead e trata o comando no cmd()
 		match(lookahead);
 		cmd();
 	}
 }
 
-//TODO: Adicionar Comentários e testar função
+/* Função seletora de comandos da calculadora.
+ * Parâmentros: (void)
+ * Retorno:		(void)
+ */
 void cmd(void) {
+
 	switch(lookahead) {
 
+		//Caso de saída do programa
 		case EXIT:
 		case QUIT:
 			exit(0);
 
+		//Caso de inicialização da expressão
 		case DEC:
 		case FLT:
 		case HEX:
@@ -57,26 +77,26 @@ void cmd(void) {
 		case '+':
 		case '-':
 		case '(':
-			E();
+			errors = 0;
+			expression();
 
+		//Caso não venha um argumento válido
 		default:
 			;
 	}
 }
 
-//TODO: Adicionar Tabela de Símbolos e Memoria Virtual
-
 /* Expressão do analisador sintático, aprimorada pelo diagrama sintático. 
  * Parâmetros:	(void)
  * Retorno:		(void)
  */
-void E(void) {
+void expression(void) {
 
 	/*Ação Semântica*/int is_negsymbol = 0;/**/
 	/*Ação Semântica*/int is_addsymbol = 0;/**/
 	/*Ação Semântica*/int is_multsymbol = 0;/**/
-	/*Ação Semântica*/errors = 0;/**/
 
+	//Aquisição do sinal frontal à expressão
 	if(lookahead == '+' || lookahead == '-') {
 		if (lookahead == '-') {
 			is_negsymbol = lookahead;
@@ -87,9 +107,11 @@ void E(void) {
 	E_BEGIN {
 		T_BEGIN {
 			FACTOR {
+
+				//Avaliação dos casos possíveis dentro do fator
 				case '(':
 					match('(');
-					E();
+					expression();
 					match(')');
 					break;
 
@@ -97,12 +119,10 @@ void E(void) {
 					/*Ação Semântica 1*/acc = (double) atoi(lexeme);/**/
 					match(DEC); break;
 
-				//TODO: Testar conversão
 				case OCT:
 					/*Ação Semântica 2*/acc = (double) strtol(lexeme,NULL,0);/**/
 					match(OCT); break;
 
-				//TODO: Testar conversão
 				case HEX:
 					/*Ação Semântica 3*/acc = (double) strtol(lexeme,NULL,0);/**/
 					match(HEX); break;
@@ -111,19 +131,33 @@ void E(void) {
 					/*Ação Semântica 4*/acc = (double) atof(lexeme);/**/
 					match(FLT); break;
 
-				//TODO: Testar conversão
 				case ROMAN:
 					/*Ação Semântica 5*/acc = (double) rmntoi(lexeme);/**/
 					match(ROMAN); break;
 
 				case ANS:
-					/*Ação Semântica 6*/acc = acc;/**/
+					/*Ação Semântica 6*/acc = ans;/**/
 					match(ANS); break;
 
-				//TODO: Adicionar variável na tabela de símbolos e, se tiver algum valor previamente atribuido a ela, colocar em acc
+				case '\n':
+				case ';':
+					break;
+
 				default:
-					/*Ação Semântica 7*/;/**/
+
+					//Gera variável para armazenar o ID salvo em lexeme
+					char varname[MAXLEN+1];
+					/*Ação Semântica 7*/strcpy(varname, lexeme); /**/
 					match(ID);
+
+					if (lookahead == ASGN) {
+						match(ASGN);
+						expression(); //Resgata valor da expressão através do acumulador
+						/*Ação Semântica 8*/ store(varname); /**/ //Armazena no endereço associado à variável (varname)
+					} else {
+						//Caso não esteja atribuindo, usa-se seu valor salvo para o acumulador
+						/*Ação Semântica 9*/ acc = recall(varname); /**/
+            		}
 			}
 
 			//Realização de multiplicação e divisão numéricas
@@ -203,15 +237,29 @@ void E(void) {
 	} E_END;
 }
 
-//////////////////////////// parser components /////////////////////////////////
+//////////////////////////// Componentes do Parser /////////////////////////////////
+
+/*********** Variáveis Globais ***********/
 
 int sp = -1; //Ponteiro da Pilha
+double stack[STACKSIZE]; //Pilha de execução para armazenamento
+
 double acc = 0; //Pseudo-Registrador Acumulador
+double ans = 0; //Valor Anterior do Acumulador
+
+int lookahead = 0; //Vê o próximo token de nosso fluxo
+char token_string[][TOKEN_WORDSIZE] = {"ID","DEC","OCT","HEX","EE","FLT","ROMAN","EXIT","QUIT","ASGN","ANS"}; //Tabela de conversão de tokens
+
 int errors = -1; //Quantidade de Erros
 int answers = 0; //Quantidade de Respostas
-int lookahead = 0; //Vê o próximo token de nosso fluxo
-double stack[STACKSIZE]; //Pilha de execução para armazenamento
-char token_string[][TOKEN_WORDSIZE] = {"ID","DEC","OCT","HEX","EE","FLT","ROMAN","EXIT","QUIT"}; //Tabela de conversão de tokens
+
+int address = 0; //Endereço temporário na tabela de símbolos
+int symtab_next_entry = 0; //Próximo índice da tabela de símbolos
+
+char symtab[MAX_ST_ENTRIES][MAXLEN + 1]; //Tabela de símbolos
+double vmem[MAX_ST_ENTRIES]; //Memória de valores associados às variáveis
+
+/*********** Funções Auxiliares ***********/
 
 /* Verifica se o token esperado está em lookahead e lê o próximo token.
  * Parâmetros:	(int) input, (FILE*) out
@@ -238,125 +286,167 @@ void match(int expected) {
 	}
 }
 
-//TODO: Criar conversão para números romanos
+/* Procura de nome da variável na tabela de símbolos.
+ * Parâmetros:	(char *) name
+ * Retorno:		(double)
+ */
+double recall(char const *name) {
+
+    // Busca pela tabela de símbolos
+    for (address = symtab_next_entry-1; address > -1; address--) {
+        if (strcmp(symtab[address], name) == 0) {
+            return vmem[address];
+        }
+    }
+
+    // Se não encontrou, cria nova entrada
+    address = symtab_next_entry++;
+    strcpy(symtab[address], name);
+    return 0; //Retorna 0 em ponto flutuante
+}
+
+/* Armazena valor do acumulador na memória virtual.
+ * Parâmetros:	(char *) name
+ * Retorno:		(void)
+ */
+void store(char const * name) {
+	recall(name);
+	vmem[address] = acc;
+}
+
 /* Converter uma string com números romanos em um inteiro.
  * Parâmetros:	(char*) string
  * Retorno:		(int) numero
  */
 int rmntoi(char* string) {
 
-	int numero;
+	int numero = 0;
+	int size = strlen(string);
+	int count = 0;
 
+	while (count<size && string[count] == 'M') {
+		numero += 1000;
+		count++;
+	}
+
+	if (count<size && (string[count] == 'C' || string[count] == 'D')) {
+
+		if (string[count] == 'C') {
+
+			if (count+1<size) {
+				switch (string[count+1]) {
+					case 'M':
+						numero += 900;
+						count += 2;
+						break;
+					case 'D':
+						numero += 400;
+						count += 2;
+						break;
+					case 'C':
+						numero += 100;
+						count++;
+						if (count+1<size && string[count+1] == 'C') {
+							numero += 100;
+							count++;
+						}
+					default:
+						numero += 100;
+						count++;
+				}
+			} else {
+				numero += 100;
+				count++;
+			}
+
+		} else {
+			numero += 500;
+			count++;
+			while (count<size && string[count] == 'C') {
+				numero += 100;
+				count++;
+			}
+		}
+	}
+
+	if (count<size && (string[count] == 'X' || string[count] == 'L')) {
+
+		if (string[count] == 'X') {
+
+			if (count+1<size) {
+				switch (string[count+1]) {
+					case 'C':
+						numero += 90;
+						count += 2;
+						break;
+					case 'L':
+						numero += 40;
+						count += 2;
+						break;
+					case 'X':
+						numero += 10;
+						count++;
+						if ((count+1)<size && string[count+1] == 'X') {
+							numero += 10;
+							count++;
+						}
+					default:
+						numero += 10;
+						count++;
+				}
+			} else {
+				numero += 10;
+				count++;
+			}
+
+		} else {
+			numero += 50;
+			count++;
+			while (count<size && string[count] == 'X') {
+				numero += 10;
+				count++;
+			}
+		}
+	}
+
+	if (count<size && (string[count] == 'I' || string[count] == 'V')) {
+
+		if (string[count] == 'I') {
+
+			if ((count+1)<size) {
+				switch (string[count+1]) {
+					case 'X':
+						numero += 9;
+						count += 2;
+						break;
+					case 'V':
+						numero += 4;
+						count += 2;
+						break;
+					case 'I':
+						numero += 1;
+						count++;
+						if ((count+1)<size && string[count+1] == 'I') {
+							numero += 1;
+							count++;
+						}
+					default:
+						numero += 1;
+						count++;
+				}
+			} else {
+				numero += 1;
+				count++;
+			}
+
+		} else {
+			numero += 5;
+			count++;
+			while (count<size && string[count] == 'I') {
+				numero += 1;
+				count++;
+			}
+		}
+	}
 	return numero;
 }
-
-/*
-int isROMAN(FILE *tape) {
-
-	int i = 0;
-
-	//Milhar (de 0 a 3 M)
-	if ((lexeme[i] = getc(tape)) == 'M') {
-		i++;
-		int j = 0;
-		while(lexeme[i] = getc(tape) == 'M' && j<2) {i++; j++;}
-	}
-	ungetc(lexeme[i], tape);
-
-	//Centenas (caso tenha C ou D no número)
-	if ((lexeme[i] = getc(tape)) == 'D' || lexeme[i] == 'C') {
-
-		if (lexeme[i] == 'C') {
-			i++;
-
-			//Resolve casos de CM, CD e CCC
-			if ((lexeme[i] = getc(tape)) == 'M' || lexeme[i] == 'D' || lexeme[i] == 'C') {
-
-				if ((lexeme[i+1] = getc(tape)) == 'C' && lexeme[i] == 'C') {
-					i=i+2;
-					lexeme[i] = getc(tape);
-				} else {
-					i++;
-				}
-			}
-
-		} else {
-			i++;
-
-			//Resolve casos de D até DCCC
-			int j = 0;
-			while(lexeme[i] = getc(tape) == 'C' && j<3) {i++; j++;}
-		}
-	}
-	ungetc(lexeme[i], tape);
-
-	//Dezenas (Caso tenha X ou L no número)
-	if ((lexeme[i] = getc(tape)) == 'L' || lexeme[i] == 'X') {
-
-		if (lexeme[i] == 'X') {
-			i++;
-
-			//Resolve casos de XC, XL e XXX
-			if ((lexeme[i] = getc(tape)) == 'C' || lexeme[i] == 'L' || lexeme[i] == 'X') {
-
-				if ((lexeme[i+1] = getc(tape)) == 'X' && lexeme[i] == 'X') {
-					i=i+2;
-					lexeme[i] = getc(tape);
-				} else {
-					i++;
-				}
-			}
-			
-		} else {
-			i++;
-
-			//Resolve casos de L até LXXX
-			int j = 0;
-			while((lexeme[i] = getc(tape)) == 'X' && j<3) {i++; j++;}
-		}
-	}
-	ungetc(lexeme[i], tape);
-
-	//Unidades (Caso tenha I e V no número)
-	if ((lexeme[i] = getc(tape)) == 'V' || lexeme[i] == 'I') {
-
-		if (lexeme[i] == 'I') {
-			i++;
-
-			//Resolve casos de IX, IV e III
-			if ((lexeme[i] = getc(tape)) == 'X' || lexeme[i] == 'V' || lexeme[i] == 'I') {
-
-				if ((lexeme[i+1] = getc(tape)) == 'I' && lexeme[i] == 'I') {
-					i=i+2;
-					lexeme[i] = getc(tape);
-				} else {
-					i++;
-				}
-			}
-			
-		} else {
-			i++;
-
-			//Resolve casos de V até VIII
-			int j = 0;
-			while((lexeme[i] = getc(tape)) == 'I' && j<3) {i++; j++;}
-		}
-	}
-	ungetc(lexeme[i], tape);
-
-	int result = ROMAN;
-	
-	//Se tiver um alfanumerico ou digito na frente, significa ID, ou seja, temos que devolver tudo.
-	if (isalpha(lexeme[i]=getc(tape)) || isdigit(lexeme[i]) || i==0) {
-		result = 0;
-		while(i>0) {
-			ungetc(lexeme[i], tape);
-			i--;
-		}
-	}
-	ungetc(lexeme[i], tape);
-
-	lexeme[i]=0;
-	return result;
-}
-*/
