@@ -323,57 +323,78 @@ int isROMAN(FILE *tape) {
  * Retorno:		(void)
  */
 void skipspaces(FILE *tape) {
-	int head;
-	while ( isspace(head = getc(tape)) ) {
+    int head;
 
-		switch(head) {
-			case'\r':
-				column = 1;
-				break;
+    while (1) {
+        while ( isspace(head = getc(tape)) ) {
+            switch(head) {
+                case'\r':
+                    column = 1;
+                    break;
+                case'\t':
+                    column += TAB_SPACE;
+                    break;
+                case'\n':
+                    column = 1;
+                    line++; 
+                    break;
+                default:
+                    column++;
+            }
+            // Permite capturar o caractere '\n'
+            if (head == '\n') {
+                break;
+            }
+        }
+        
+        //'head' agora tem o primeiro char que nao é espaço, ou é '\n'.
+        if (head == 27) { // o 27 é o ASCII do ESC, começo da leitura de setas 
+            int next_char = getc(tape);
+            if (next_char == '[') {
+                int third_char = getc(tape);
+                
+                // Ignora Cima(A), Baixo(B), Direita(C) ou Esquerda(D)
+                if (third_char == 'A' || third_char == 'B' || third_char == 'C' || third_char == 'D') {
+                    continue; 
+                } else {
+                    // Devolvemos na ordem inversa.
+                    ungetc(third_char, tape);
+                    ungetc(next_char, tape);
+                }
+            } else {
+                // Era 27, mas não 27-[, então devolve o que leu.
+                ungetc(next_char, tape);
+            }
+        }
+        break;
+    }
 
-			case'\t':
-				column += TAB_SPACE;
-				break;
-			case'\n':
-				column = 1;
-				line++; 
-				break;
-			default:
-				column++;
-		}
-
-		//Permite capturar o caractere '\n' para uso futuro
-		if (head == '\n') {
-			break;
-		}
-	}
-	ungetc(head, tape);
+    ungetc(head, tape);
 }
 
-//TODO: Ignorar setinhas (esquerda e direita), e dar utilidade para setinhas cima e baixo
 /* Obtém token possível através de demais autômatos.
  * Parâmetros:	(FILE*) source
  * Retorno:		(int) token
  */
 int gettoken(FILE *source) {
-	int token;
+    int token;
 
-	skipspaces(source);
+    skipspaces(source);
 
-	if ( !(token = isROMAN(source))) {
-		if ( !(token = isID(source)) ) {
-			if ( !(token = isHEX(source)) ) {
-				if ( !(token = isOCT(source)) ) {
-					if ( !(token = isNUM(source)) ) {
-						//Retorno do caractere em ASCII
-						lexeme[0] = (token = getc(source));
-						lexeme[1] = 0;
-					}
-				}
-			}
-		}
-	}
+    if ( !(token = isROMAN(source))) {
+        if ( !(token = isID(source)) ) {
+            if ( !(token = isHEX(source)) ) {
+                if ( !(token = isOCT(source)) ) {
+                    if ( !(token = isNUM(source)) ) {
+                        //Retorno do caractere em ASCII
+                        lexeme[0] = (token = getc(source));
+                        lexeme[1] = 0;
+                    }
+                }
+            }
+        }
+    }
 
-	column += strlen(lexeme);
-	return token;
+    column += strlen(lexeme);
+    return token;
 }

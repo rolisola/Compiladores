@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <lexer.h>
 #include <parser.h>
 #include <setjmp.h>
@@ -28,6 +29,12 @@ void mybc(void) {
                 fprintf(objcode, "%lg\n", acc);
                 match(lookahead);
             }
+			else {
+                //Se o comando terminou e nao temos um '\n'
+                if (lookahead != EOF) {
+                    match('\n');
+                }
+            }
         }
         
         //"catch": O match() deu erro (longjmp)
@@ -47,6 +54,7 @@ void mybc(void) {
 
 //TODO: Adicionar Comentários e testar função
 void cmd(void) {
+	
 	switch(lookahead) {
 
 		case EXIT:
@@ -68,6 +76,74 @@ void cmd(void) {
 		default:
 			;
 	}
+}
+
+
+//Função aux para obter o valor de um dígito romano.
+int roman_value(char r) {
+    r = toupper(r); //Garantir que o caractere seja maiúsculo.
+    switch (r) {
+        case 'I': return 1;
+        case 'V': return 5;
+        case 'X': return 10;
+        case 'L': return 50;
+        case 'C': return 100;
+        case 'D': return 500;
+        case 'M': return 1000;
+        default:  return 0;
+    }
+}
+
+//Função para converter uma string de num romano em double.
+double roman_to_double(char *s) {
+    int result = 0;
+    int prev_value = 0;
+
+    //Percorre a string de trás para frente.
+    for (int i = strlen(s) - 1; i >= 0; i--) {
+        int current_value = roman_value(s[i]);
+
+        if (current_value < prev_value) {
+            result -= current_value;
+        } else {
+            result += current_value;
+        }
+        prev_value = current_value;
+    }
+    return (double)result;
+}
+
+//Estrutura para uma entrada da tabela de símbolos.
+typedef struct {
+    char *name;
+    double value;
+} Symbol;
+
+//Tabela de Símbolos
+#define MAX_SYMBOLS 100
+Symbol symbol_table[MAX_SYMBOLS];
+int symbol_count = 0;
+
+// Procura um símbolo na tabela pelo nome.
+Symbol* lookup_symbol(char *name) {
+    for (int i = 0; i < symbol_count; i++) { 	//Percorre a tabela.
+        if (strcmp(symbol_table[i].name, name) == 0) { 
+            return &symbol_table[i];
+        } 
+    }
+    return NULL;
+}
+
+//Adiciona um novo símbolo à tabela.  
+Symbol* add_symbol(char *name) {
+    if (symbol_count >= MAX_SYMBOLS) {
+        fprintf(stderr, "Erro: Tabela de símbolos cheia!\n");
+        exit(1);
+    }
+    Symbol *new_symbol = &symbol_table[symbol_count++];
+    new_symbol->name = strdup(name); 	//strdup() aloca e copia a string
+    new_symbol->value = 0.0;
+    return new_symbol;
 }
 
 /* Função inicial do analisador sintático, aprimorada pelo diagrama sintático. 
@@ -100,29 +176,35 @@ void E(void) {
 					/*Ação Semântica 1*/acc = atoi(lexeme);/**/
 					match(DEC); break;
 
-				//TODO: Testar conversão
 				case OCT:
-					/*Ação Semântica 2*/acc = (double) strtol(lexeme,NULL,0);/**/
+					/*Ação Semântica 2*/acc = (double) strtol(lexeme,NULL,8);/**/
 					match(OCT); break;
 
-				//TODO: Testar conversão
 				case HEX:
-					/*Ação Semântica 3*/acc = (double) strtol(lexeme,NULL,0);/**/
+					/*Ação Semântica 3*/acc = (double) strtol(lexeme,NULL,16);/**/
 					match(HEX); break;
 
 				case FLT:
 					/*Ação Semântica 4*/acc = atof(lexeme);/**/
 					match(FLT); break;
 
-				//TODO: Substituir ação semântica pela conversão de numero romano para double
 				case ROMAN:
-					/*Ação Semântica 5*/print_lexeme(objcode);/**/
-					match(ROMAN); break;
+                    /*Ação Semântica 5*/acc = roman_to_double(lexeme);/**/
+                    match(ROMAN); break;
 
-				//TODO: Adicionar variável na tabela de símbolos e, se tiver algum valor previamente atribuido a ela, colocar em acc
-				default:
-					/*Ação Semântica 6*/print_lexeme(objcode);/**/
-					match(ID);
+				default: {
+                    /*Ação Semântica 6*/
+                    Symbol *s = lookup_symbol(lexeme);
+                    if (s == NULL) {
+                        s = add_symbol(lexeme); 
+                    }
+                    acc = s->value; //Variável no acumulador
+                    /**/
+                    
+                    match(ID);
+                    break;
+
+                }
 			}
 
 			/*Ação Semântica 7*/
@@ -208,18 +290,4 @@ void match(int expected) {
 	}
 }
 
-//TODO: Remover essa função se não tiver mais utilidade no código
-/* Imprime o valor de lexeme no arquivo de saída padrão (stdout).
- * Parâmetros:	(void)
- * Retorno:		(void)
- */
-void print_lexeme(FILE* out) {
-	fprintf(out, "%s ", lexeme);
-
-	// Depuração de tokens, caso desejado:
-	#ifdef DEBUG
-		printf("->[");
-		print_token(lookahead, out);
-		printf("]\n");
-	#endif
-}
+// void print_lexeme(FILE* out) removida
