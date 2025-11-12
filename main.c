@@ -18,7 +18,7 @@ FILE *objcode;
  */
 void handle_sigint(int sig) {
 
-	//Retira os caracteres do Ctrl+C do buffer de saída
+	//Retira os caracteres imprimíveis do Ctrl+C do buffer de saída
 	fprintf(objcode,"\b \b\b \b\n");
 
 	//Atualiza a contagem de linhas e colunas
@@ -29,7 +29,6 @@ void handle_sigint(int sig) {
 	ungetc('\n',source);
 }
 
-//TODO: Criar documentação completa e comentários elucidativos ao código
 int main(void) {
 
 	//Configura entrada/saída como padrão

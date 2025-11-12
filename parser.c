@@ -11,6 +11,7 @@
 #define E_END while(is_addsymbol)
 #define FACTOR switch(lookahead)
 
+//TODO: Revisar arquivo .h e ver se itens estão coerentes/comentados
 //TODO: Adicionar Comentários e testar função
 void mybc(void) {
 
@@ -22,7 +23,7 @@ void mybc(void) {
 			if (!errors) {
 				fprintf(objcode,"%lg\n", acc);
 				answers++;
-				errors--; // Reduz-se um erro para evitar repetições de respostas
+				errors--; // Deixa o erro como -1 para evitar repetições de respostas
 			}
 	
 			if (lookahead == '\n' && (errors >0 || answers >0)) {
@@ -65,7 +66,7 @@ void cmd(void) {
 
 //TODO: Adicionar Tabela de Símbolos e Memoria Virtual
 
-/* Função inicial do analisador sintático, aprimorada pelo diagrama sintático. 
+/* Expressão do analisador sintático, aprimorada pelo diagrama sintático. 
  * Parâmetros:	(void)
  * Retorno:		(void)
  */
@@ -248,3 +249,114 @@ int rmntoi(char* string) {
 
 	return numero;
 }
+
+/*
+int isROMAN(FILE *tape) {
+
+	int i = 0;
+
+	//Milhar (de 0 a 3 M)
+	if ((lexeme[i] = getc(tape)) == 'M') {
+		i++;
+		int j = 0;
+		while(lexeme[i] = getc(tape) == 'M' && j<2) {i++; j++;}
+	}
+	ungetc(lexeme[i], tape);
+
+	//Centenas (caso tenha C ou D no número)
+	if ((lexeme[i] = getc(tape)) == 'D' || lexeme[i] == 'C') {
+
+		if (lexeme[i] == 'C') {
+			i++;
+
+			//Resolve casos de CM, CD e CCC
+			if ((lexeme[i] = getc(tape)) == 'M' || lexeme[i] == 'D' || lexeme[i] == 'C') {
+
+				if ((lexeme[i+1] = getc(tape)) == 'C' && lexeme[i] == 'C') {
+					i=i+2;
+					lexeme[i] = getc(tape);
+				} else {
+					i++;
+				}
+			}
+
+		} else {
+			i++;
+
+			//Resolve casos de D até DCCC
+			int j = 0;
+			while(lexeme[i] = getc(tape) == 'C' && j<3) {i++; j++;}
+		}
+	}
+	ungetc(lexeme[i], tape);
+
+	//Dezenas (Caso tenha X ou L no número)
+	if ((lexeme[i] = getc(tape)) == 'L' || lexeme[i] == 'X') {
+
+		if (lexeme[i] == 'X') {
+			i++;
+
+			//Resolve casos de XC, XL e XXX
+			if ((lexeme[i] = getc(tape)) == 'C' || lexeme[i] == 'L' || lexeme[i] == 'X') {
+
+				if ((lexeme[i+1] = getc(tape)) == 'X' && lexeme[i] == 'X') {
+					i=i+2;
+					lexeme[i] = getc(tape);
+				} else {
+					i++;
+				}
+			}
+			
+		} else {
+			i++;
+
+			//Resolve casos de L até LXXX
+			int j = 0;
+			while((lexeme[i] = getc(tape)) == 'X' && j<3) {i++; j++;}
+		}
+	}
+	ungetc(lexeme[i], tape);
+
+	//Unidades (Caso tenha I e V no número)
+	if ((lexeme[i] = getc(tape)) == 'V' || lexeme[i] == 'I') {
+
+		if (lexeme[i] == 'I') {
+			i++;
+
+			//Resolve casos de IX, IV e III
+			if ((lexeme[i] = getc(tape)) == 'X' || lexeme[i] == 'V' || lexeme[i] == 'I') {
+
+				if ((lexeme[i+1] = getc(tape)) == 'I' && lexeme[i] == 'I') {
+					i=i+2;
+					lexeme[i] = getc(tape);
+				} else {
+					i++;
+				}
+			}
+			
+		} else {
+			i++;
+
+			//Resolve casos de V até VIII
+			int j = 0;
+			while((lexeme[i] = getc(tape)) == 'I' && j<3) {i++; j++;}
+		}
+	}
+	ungetc(lexeme[i], tape);
+
+	int result = ROMAN;
+	
+	//Se tiver um alfanumerico ou digito na frente, significa ID, ou seja, temos que devolver tudo.
+	if (isalpha(lexeme[i]=getc(tape)) || isdigit(lexeme[i]) || i==0) {
+		result = 0;
+		while(i>0) {
+			ungetc(lexeme[i], tape);
+			i--;
+		}
+	}
+	ungetc(lexeme[i], tape);
+
+	lexeme[i]=0;
+	return result;
+}
+*/

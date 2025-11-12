@@ -1,6 +1,6 @@
 // Declarações:
-extern int lookahead; // a ser definido no parser
-extern void mybc(void); // a ser definido no parser
-extern int gettoken(FILE *); // a ser definido no lexer
-extern int line;
-extern int column;
+extern int line; // Definido no lexer
+extern int column; // Definido no lexer
+extern int lookahead; // Definido no parser
+extern void mybc(void); // Definido no parser
+extern int gettoken(FILE *); // Definido no lexer

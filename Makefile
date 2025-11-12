@@ -30,6 +30,7 @@ veryclean: clean
 	$(RM) *~ mybc debug debug_parser.o
 	rm -rf extracted
 
+# TODO: Atualizar README.md
 # TODO: Adicionar data e número do grupo à geração do tar.gz
 # Limpa e comprime o projeto para enviar ao professor
 compact: veryclean
