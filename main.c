@@ -8,27 +8,41 @@
 #include <main.h>
 #include <signal.h>
 
+//Variáveis globais
 FILE *source;
 FILE *objcode;
 
-//TODO: Testar função
-//Tratamento do Sinal do Ctrl+C
+/* Tratamento do sinal do comando Ctrl+C.
+ * Parâmentros:	(int) sig
+ * Retorno: 	(void)
+ */
 void handle_sigint(int sig) {
+
+	//Retira os caracteres do Ctrl+C do buffer de saída
 	fprintf(objcode,"\b \b\b \b\n");
+
+	//Atualiza a contagem de linhas e colunas
 	column = 1;
 	line++;
-	fflush(source);
-	fprintf(source,"\n");
+
+	//Adiciona o caractere '\n' no buffer de entrada
+	ungetc('\n',source);
 }
 
 //TODO: Criar documentação completa e comentários elucidativos ao código
 int main(void) {
 
-	lookahead = gettoken(source = stdin);
+	//Configura entrada/saída como padrão
+	source = stdin;
 	objcode = stdout;
 
+	//Habilita tratamento de sinal ao Ctrl+C
 	signal(SIGINT, handle_sigint);
 
+	//Adquire o primeiro token
+	lookahead = gettoken(source);
+
+	//Inicializa a calculadora
 	mybc();
 
 	return 0;

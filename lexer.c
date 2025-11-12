@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <lexer.h>
 
+//Variáveis globais
 char lexeme[MAXLEN+1];
 int line = 1;
 int column = 1;
@@ -29,17 +30,12 @@ int isID(FILE *tape) {
 	lexeme[i] = 0;
 
 	//Caso seja um comando reservado, retorna o respectivo token
-	if ( strcmp(lexeme,"exit") == 0 ) {
+	if ( strcmp(lexeme,"exit") == 0 )
 		token = EXIT;
-	}
-
-	if ( strcmp(lexeme,"quit") == 0 || strcmp(lexeme,"q") == 0) {
+	if ( strcmp(lexeme,"quit") == 0 || strcmp(lexeme,"q") == 0)
 		token = QUIT;
-	}
-
-	if ( strcmp(lexeme,"ans") == 0 ||  strcmp(lexeme,"ANS") == 0 ) {
+	if ( strcmp(lexeme,"ans") == 0 ||  strcmp(lexeme,"ANS") == 0 )
 		token = ANS;
-	}
 
 	return token;
 }
@@ -321,48 +317,66 @@ int isROMAN(FILE *tape) {
 	return result;
 }
 
-/* Ignora espaços em branco e conta linhas/colunas.
+/* Ignora espaços em branco e setas, além de contar linhas/colunas.
  * Parâmetros:	(FILE*) tape
  * Retorno:		(void)
  */
 void skipspaces(FILE *tape) {
 	int head;
-	while ( isspace(head = getc(tape)) ) {
-
-		switch(head) {
-			case'\r':
-				column = 1;
+	do {
+		while ( isspace(head = getc(tape)) ) {
+	
+			//Verifica qual é o caractere para atualizar as linhas/colunas de acordo
+			switch(head) {
+				case'\r':
+					column = 1;
+					break;
+	
+				case'\t':
+					column += TAB_SPACE;
+					break;
+				case'\n':
+					column = 0;
+					line++; 
+					break;
+				default:
+					column++;
+			}
+	
+			//Permite capturar o caractere '\n' para uso futuro
+			if (head == '\n') {
 				break;
-
-			case'\t':
-				column += TAB_SPACE;
-				break;
-			case'\n':
-				column = 1;
-				line++; 
-				break;
-			default:
-				column++;
+			}
 		}
 
-		//Permite capturar o caractere '\n' para uso futuro
-		if (head == '\n') {
-			break;
+		//Ignora caracteres das setas, tratando erros de deleções cometidas pelo usuário
+		while (head == '\x1B') {
+			head = getc(tape);
+			if (head == '[') {
+				head = getc(tape);
+				if(head == 'A' || head == 'B' || head == 'C' || head == 'D') {
+					head = getc(tape);
+				}
+			}
 		}
-	}
+
+	} while( isspace(head) && head !='\n');
+
 	ungetc(head, tape);
 }
 
-//TODO: Ignorar setinhas (esquerda e direita), e dar utilidade para setinhas cima e baixo
 /* Obtém token possível através de demais autômatos.
  * Parâmetros:	(FILE*) source
  * Retorno:		(int) token
  */
 int gettoken(FILE *source) {
+
 	int token;
 
+	//Ignora espaços/setas
 	skipspaces(source);
 
+	//Averigua, de maneira identada, cada autômato
 	if ( !(token = isROMAN(source))) {
 		if ( !(token = isID(source)) ) {
 			if ( !(token = isHEX(source)) ) {
@@ -377,6 +391,7 @@ int gettoken(FILE *source) {
 		}
 	}
 
+	//Adiciona as colunas refetente ao token
 	column += strlen(lexeme);
 	return token;
 }

@@ -16,26 +16,26 @@ void mybc(void) {
 
 	cmd();
 
-	while(lookahead != EOF) {
+	while (lookahead != EOF) {
+		
 		if (lookahead == '\n' || lookahead == ';') {
 			if (!errors) {
 				fprintf(objcode,"%lg\n", acc);
 				answers++;
 				errors--; // Reduz-se um erro para evitar repetições de respostas
 			}
-
+	
 			if (lookahead == '\n' && (errors >0 || answers >0)) {
 				errors>0? (line += errors) : 0;
 				answers>0? (line += answers) : 0;
 				column = 1;
 				answers = 0;
 			}
-
-			match(lookahead);
-			cmd();
 		}
+
+		match(lookahead);
+		cmd();
 	}
-	match(EOF);
 }
 
 //TODO: Adicionar Comentários e testar função
@@ -63,7 +63,7 @@ void cmd(void) {
 	}
 }
 
-/*Adicionar Tabela de Símbolos e Memoria Virtual*/
+//TODO: Adicionar Tabela de Símbolos e Memoria Virtual
 
 /* Função inicial do analisador sintático, aprimorada pelo diagrama sintático. 
  * Parâmetros:	(void)
@@ -93,7 +93,7 @@ void E(void) {
 					break;
 
 				case DEC:
-					/*Ação Semântica 1*/acc = atoi(lexeme);/**/
+					/*Ação Semântica 1*/acc = (double) atoi(lexeme);/**/
 					match(DEC); break;
 
 				//TODO: Testar conversão
@@ -107,12 +107,12 @@ void E(void) {
 					match(HEX); break;
 
 				case FLT:
-					/*Ação Semântica 4*/acc = atof(lexeme);/**/
+					/*Ação Semântica 4*/acc = (double) atof(lexeme);/**/
 					match(FLT); break;
 
-				//TODO: Substituir ação semântica pela conversão de numero romano para double
+				//TODO: Testar conversão
 				case ROMAN:
-					/*Ação Semântica 5*/acc = 1;/**/
+					/*Ação Semântica 5*/acc = (double) rmntoi(lexeme);/**/
 					match(ROMAN); break;
 
 				case ANS:
@@ -121,21 +121,27 @@ void E(void) {
 
 				//TODO: Adicionar variável na tabela de símbolos e, se tiver algum valor previamente atribuido a ela, colocar em acc
 				default:
-					/*Ação Semântica 6*/;/**/
+					/*Ação Semântica 7*/;/**/
 					match(ID);
 			}
 
-			/*Ação Semântica 7*/
+			//Realização de multiplicação e divisão numéricas
+			/*Ação Semântica 8*/
 			if(is_multsymbol) {
 				
+				//Se não houver erros, realiza a operação; caso contrário limpa-se a pilha
 				if (!errors) {
+
 					if (is_multsymbol == '*') {
 						stack[sp] *= acc;
 					} else {
 						stack[sp] /= acc;
 					}
 					acc = stack[sp--];
+
 				} else {
+
+					//Limpeza da pilha
 					while (sp>-1) {
 						stack[sp--] = 0;
 					}
@@ -144,6 +150,7 @@ void E(void) {
 			}
 			/**/
 
+			//Caso venha o sinal de '*' ou '/', continua no termo e adiciona acumulador à pilha
 			if((lookahead == '*' || lookahead == '/')) {
 				/*Ação Semântica 8*/ is_multsymbol = lookahead;/**/
 				/*Ação Semântica 9*/ stack[++sp] = acc;/**/
@@ -152,6 +159,7 @@ void E(void) {
 
 		} T_END;
 
+		//Realização da negação numérica
 		/*Ação Semântica 10*/
 		if (is_negsymbol && !errors) {
 			acc = -acc;
@@ -159,17 +167,23 @@ void E(void) {
 		}
 		/**/
 
+		//Realização da soma e subtração numéricas
 		/*Ação Semântica 11*/
 		if(is_addsymbol) {
 
+			//Se não houver erros, realiza a operação; caso contrário limpa-se a pilha
 			if (!errors) {
+
 				if (is_addsymbol == '+') {
 					stack[sp] += acc;
 				} else {
 					stack[sp] -= acc;
 				}
 				acc = stack[sp--];
+
 			} else {
+
+				//Limpeza da pilha
 				while (sp>-1) {
 					stack[sp--] = 0;
 				}
@@ -178,6 +192,7 @@ void E(void) {
 		}
 		/**/
 
+		//Caso venha o sinal de '+' ou '-', continua na expressão e adiciona acumulador à pilha
 		if((lookahead == '+' || lookahead == '-')) {
 			/*Ação Semântica 12*/is_addsymbol = lookahead;/**/
 			/*Ação Semântica 13*/ stack[++sp] = acc;/**/
@@ -190,32 +205,46 @@ void E(void) {
 //////////////////////////// parser components /////////////////////////////////
 
 int sp = -1; //Ponteiro da Pilha
-double acc = 0; //Pseudo-Registrador
-int errors = 0; //Quantidade de Erros
+double acc = 0; //Pseudo-Registrador Acumulador
+int errors = -1; //Quantidade de Erros
 int answers = 0; //Quantidade de Respostas
 int lookahead = 0; //Vê o próximo token de nosso fluxo
-double stack[STACKSIZE]; //Pilha para armazenamento
+double stack[STACKSIZE]; //Pilha de execução para armazenamento
 char token_string[][TOKEN_WORDSIZE] = {"ID","DEC","OCT","HEX","EE","FLT","ROMAN","EXIT","QUIT"}; //Tabela de conversão de tokens
 
-//TODO: Dar um jeito para que, após o erro, tenha um reset no prompt para voltar à função CMD sem executar tais contas/instruções
 /* Verifica se o token esperado está em lookahead e lê o próximo token.
  * Parâmetros:	(int) input, (FILE*) out
  * Retorno:		(void)
  */
 void match(int expected) {
 
-	//Caso não seja o esperado, imprime um erro ou limpa a pilha.
-
+	//Caso não seja o esperado, imprime um erro.
 	if (lookahead == expected) {
 		lookahead = gettoken(source);
 	} else {
+
+		//Se não for o fim da expressão, imprime o erro de sintaxe e busca o próximo token
 		if (lookahead != ';' && lookahead != '\n') {
 			fprintf(stderr,"Erro de Sintaxe (Ln %d, Cl %d). Esperava-se ", line, (int)(column - strlen(lexeme)));
 			fprintf(stderr,"%s, ao invés de %s.\n", (expected>=ID) ? token_string[expected-ID] : ((char[]){expected,'\0'}), (lookahead>=ID) ? token_string[lookahead-ID] : ((char[]){lookahead,'\0'}));
 			lookahead = gettoken(source);
 		} else {
+
+			//No caso de ser o fim da expressão, indica a incompletude da instrução aritmética
 			fprintf(stderr,"Instrução incompleta.\n");
 		}
 		errors++;
 	}
+}
+
+//TODO: Criar conversão para números romanos
+/* Converter uma string com números romanos em um inteiro.
+ * Parâmetros:	(char*) string
+ * Retorno:		(int) numero
+ */
+int rmntoi(char* string) {
+
+	int numero;
+
+	return numero;
 }
