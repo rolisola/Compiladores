@@ -23,7 +23,6 @@ veryclean: clean
 	$(RM) *~ mybc
 	rm -rf extracted
 
-# TODO: Atualizar README.md
 # Limpa e comprime o projeto para enviar ao professor
 compact: veryclean
 	tar zcvf mybc_grp9_`date "+%Y%m%d"`.tar.gz Makefile *.[ch]
