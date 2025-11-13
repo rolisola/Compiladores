@@ -46,4 +46,6 @@ No arquivo Makefile, terão automações para a compilação do projeto, bem com
 
 ## Autores
 
-André Luis, Vitor Rolisola e Lucas Abdala
+[![All Contributors](https://img.shields.io/github/all-contributors/projectOwner/projectName?color=ee8449&style=flat-square)](#contributors)
+![Contribuidores](https://contributors-img.web.app/image?repo=usuario/repositorio)
+
