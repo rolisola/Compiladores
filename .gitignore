@@ -3,3 +3,6 @@
 mybc
 extracted
 *.tar.gz
+material/
+docs/
+!docs/documentacao.tex
