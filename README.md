@@ -46,6 +46,4 @@ No arquivo Makefile, terão automações para a compilação do projeto, bem com
 
 ## Autores
 
-[![All Contributors](https://img.shields.io/github/all-contributors/rolisola/Compiladores?color=ee8449&style=flat-square)](#contributors)
 ![Contribuidores](https://contributors-img.web.app/image?repo=rolisola/Compiladores)
-
