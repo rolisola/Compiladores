@@ -1,0 +1,150 @@
+\documentclass[12pt, a4paper]{scrreprt}
+
+% Pacotes básicos
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage[strings]{underscore}
+
+\usepackage{helvet} % Similar à Arial
+\renewcommand{\familydefault}{\sfdefault} % Sans-serif
+
+% Define o espaço entre parágrafos
+\setlength{\parskip}{1em} % Ajuste o valor conforme necessário
+\setlength{\parindent}{0pt} % Sem recuo
+
+% Configurações de margens
+\geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
+
+% Configurações de cabeçalhos e rodapés
+\usepackage{scrlayer-scrpage}
+\pagestyle{scrheadings}
+
+% Definições de cabeçalhos e rodapés
+%\ihead{Árvores}
+\chead{\leftmark}
+\ohead{\pagemark}
+
+\title{Documentação de projeto mybc}
+\author{Vitor Marchini Rolisola, André Luis Dias Nogueira, Lucas Abdala Martins}
+\date{November 2025}
+
+\begin{document}
+\begin{titlepage}
+    \centering
+    \includegraphics[width=0.75\textwidth]{src/logo_unesp.jpg}
+    \vfill
+    \Huge\textbf{Documentação de projeto \\ mybc}\\[1.5cm]
+    \Large\textbf{Compiladores}\\[1.5cm]
+    \vfill
+    \begin{flushleft}
+        \textbf{Equipe:}\\
+        \hspace{1.5cm}André Luis Dias Nogueira \\ 
+        \hspace{1.5cm}Lucas Abdala Martins \\
+        \hspace{1.5cm}Vitor Marchini Rolisola \\
+    \end{flushleft}
+    \vfill
+    \date \\
+\end{titlepage}
+
+% sumário
+\tableofcontents
+
+\newpage
+
+\chapter{Introdução}
+Esta documentação descreve a calculadora interativa desenvolvida na disciplina de Compiladores, enfatizando a ligação entre as entregas do projeto e os tópicos apresentados em aula. A implementação foi baseada nos materiais de aula, especialmente os roteiros das aulas 3, 4, 5 e 10, que apresentam diagrama sintático, gramáticas em EBNF, construção de autômatos e evolução do parser.
+
+\chapter{Metodologia e Referencial}
+O desenvolvimento seguiu um processo incremental:
+\begin{enumerate}
+    \item \textbf{Modelagem}: com base nos diagramas sintáticos estudados em aula, definimos uma gramática LL(1) para expressões aritméticas estendidas.
+    \item \textbf{Projeto dos Autômatos}: os autômatos determinísticos descritos em \texttt{aula 3} orientaram a criação de reconhecedores independentes para identificadores, números em diferentes bases e comandos reservados.
+    \item \textbf{Integração com Ações Semânticas}: a partir das aulas sobre EBNF e pilhas (\texttt{aula 4} e \texttt{aula 5}), anexamos ações semânticas ao diagrama sintático para gerar código em ordem correta.
+    \item \textbf{Refinamento do Parser}: as versões evolutivas em \texttt{aula 10} serviram de base para ajustar a estrutura recursiva, o controle de erros e a tabela de símbolos.
+\end{enumerate}
+
+\chapter{Fundamentos Teóricos}
+\section{Gramática e EBNF}
+A gramática adotada é equivalente à apresentada em aula, com níveis para \textit{expressão}, \textit{termo} e \textit{fator}. Em EBNF simplificada:
+\begin{align*}
+    \langle Expressao \rangle &::= [\operatorname{+} \mid \operatorname{-}]\,\langle Termo \rangle\,\{\operatorname{+}\,\langle Termo \rangle \mid \operatorname{-}\,\langle Termo \rangle\} \\
+    \langle Termo \rangle &::= \langle Fator \rangle\,\{\operatorname{*}\,\langle Fator \rangle \mid \operatorname{/}\,\langle Fator \rangle\} \\
+    \langle Fator \rangle &::= \operatorname{(}\,\langle Expressao \rangle\,\operatorname{)} \mid \langle Literal \rangle \mid \langle Identificador \rangle\,[\operatorname{:=}\,\langle Expressao \rangle]
+\end{align*}
+Os literais contemplam bases decimal, octal, hexadecimal, ponto flutuante, expoente e numerais romanos, como discutido em sala.
+
+\section{Diagramas Sintáticos}
+Os diagramas sintáticos das aulas foram utilizados diretamente para guiar a recursão do parser. Cada macro no arquivo \texttt{parser.c} (\texttt{T\_BEGIN}/\texttt{T\_END}, \texttt{E\_BEGIN}/\texttt{E\_END}) representa laços equivalentes aos caminhos do diagrama, garantindo a mesma ordem de visitação que as transparências de aula sugerem.
+
+\section{Autômatos e Reconhecimento Léxico}
+Seguindo o material de \texttt{aula 3}, cada token é reconhecido por um autômato determinístico separado, implementado em funções como \texttt{isID}, \texttt{isNUM}, \texttt{isHEX} e \texttt{isROMAN}. O encadeamento dos autômatos na função \texttt{gettoken} garante que ambiguidades sejam resolvidas conforme a prioridade definida na especificação da linguagem.
+
+\section{Recursão e Padrão LL(1)}
+O parser segue padrão LL(1), lendo tokens da esquerda para a direita e construindo derivações mais à esquerda por meio de chamadas recursivas. O primeiro token é adiantado em \texttt{main.c}, e cada chamada de \texttt{expression}, \texttt{cmd} ou \texttt{match} garante que a condição LL(1) seja preservada.
+
+\section{Tabela de Símbolos e Pilha}
+Inspirados nas práticas das aulas sobre ambientes de execução, a implementação emprega:
+\begin{itemize}
+    \item \textbf{Tabela de símbolos linear}: arrays \texttt{symtab} e \texttt{vmem} mapeiam identificadores para valores, conforme as exercitações de \texttt{aula 5}.
+    \item \textbf{Pilha de avaliação}: o vetor \texttt{stack} e o ponteiro \texttt{sp} reproduzem a pilha utilizada para armazenar operandos intermediários de termos e expressões, como indicado nos exemplos de ações semânticas em diagrama sintático.
+\end{itemize}
+
+\chapter{Arquitetura da Implementação}
+\section{\texttt{main.c}}
+Responsável por configurar entradas e saídas, registrar o tratador de sinais e iniciar o analisador. O método \texttt{handle\_sigint} referencia a rotina de controle de interrupções proposta nas aulas sobre integração com o terminal.
+
+\section{\texttt{lexer.c} e \texttt{lexer.h}}
+Os autômatos são estruturados em funções separadas, cada uma documentada com a expressão regular equivalente. A função \texttt{skipspaces} implementa o tratamento de espaços, tabulações e sequências de escape, além de manter \texttt{line} e \texttt{column}, como exigido para relatórios de erro.
+
+\section{\texttt{parser.c} e \texttt{parser.h}}
+O arquivo define:
+\begin{itemize}
+    \item o laço principal \texttt{mybc}, que consome comandos até receber EOF ou ordens de saída;
+    \item \texttt{cmd}, que despacha tokens para expressões ou encerra o programa;
+    \item \texttt{expression}, que aplica negacão, soma/subtração e multiplicção/divisão usando pilha e ações semânticas numeradas (as mesmas presentes nos slides de aula sobre diagramas sintáticos);
+    \item funções auxiliares \texttt{match}, \texttt{recall}, \texttt{store} e \texttt{rmntoi}, conectando a gramática ao ambiente de execução.
+\end{itemize}
+
+\section{\texttt{tokens.h} e \texttt{main.h}}
+Centralizam a enumeração de tokens e a declaração compartilhada de variáveis e funções. A divisão segue o padrão modular discutido na primeira parte do curso.
+
+\section{Fluxo de Execução}
+\begin{enumerate}
+    \item O usuário insere uma expressão; \texttt{gettoken} identifica o primeiro token.
+    \item \texttt{cmd} avalia se o token é um comando de saída ou o início de uma expressão.
+    \item \texttt{expression} aplica as regras da gramática, empilhando resultados parciais e executando as ações semânticas.
+    \item O resultado final é impresso e armazenado em \texttt{ans}; variáveis são salvas via \texttt{store}.
+    \item Em caso de erro, \texttt{match} e \texttt{skipspaces} relatam linha e coluna, recuperando o fluxo conforme os exemplos em aula.
+\end{enumerate}
+
+\section{Exemplos de Uso}
+A Listagem~\ref{lst:session} demonstra recursos discutidos em sala, como atribuição, bases numéricas e reutilização de resultados anteriores.
+\begin{lstlisting}[caption={Sessão de execução},label={lst:session}]
+$ ./mybc
+(2 + 3) * 4;
+20
+x := 0x10 + 8;
+24
+y := ans / II;
+12
+quit
+\end{lstlisting}
+
+\chapter{Testes e Garantia de Qualidade}
+Os planos de teste revisitam os cenários propostos no material de apoio:
+\begin{itemize}
+    \item expressões aritméticas simples e compostas;
+    \item combinação de bases numéricas e uso de numerais romanos;
+    \item atribuições aninhadas e recuperação de valores com \texttt{ans};
+    \item interrupções com \texttt{Ctrl+C} e edições interativas com setas, para validar a limpeza do estado.
+\end{itemize}
+
+\chapter{Conclusão}
+O projeto sintetiza os conceitos de gramáticas LL(1), autômatos, diagramas sintáticos, ações semânticas, pilhas e tabelas de símbolos estudados em aula.
+\end{document}

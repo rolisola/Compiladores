@@ -1,13 +1,27 @@
-//Definições:
+/**
+ * @file lexer.h
+ * @brief Interface do analisador léxico e estruturas auxiliares.
+ */
+
+// Definições básicas do analisador léxico:
+#pragma once
 #define MAXLEN 128
 #define TAB_SPACE 4
 
-enum {
-	ID = 1024,
-	DEC,
-	OCT,
-	HEX,
-	EE,
-    FLT,
-	ROMAN,
-};
+// Declarações de variáveis compartilhadas:
+extern char lexeme[MAXLEN + 1];
+extern int line;
+extern int column;
+
+// Declarações de funções utilitárias:
+extern int isID(FILE *);
+extern int isDEC(FILE *);
+extern int isEE(FILE *);
+extern int isNUM(FILE *);
+extern int isOCT(FILE *);
+extern int isHEX(FILE *);
+extern int isROMAN(FILE *);
+extern int isASGN(FILE *);
+
+extern void skipspaces(FILE *);
+extern int gettoken(FILE *);
