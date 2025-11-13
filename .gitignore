@@ -4,5 +4,7 @@ mybc
 extracted
 *.tar.gz
 material/
-docs/
 !docs/documentacao.tex
+!docs/documentacao.pdf
+!docs/src/
+docs/
