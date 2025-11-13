@@ -1,4 +1,5 @@
 {
   "projectName": "Compiladores",
-  "projectOwner": "rolisola"
+  "projectOwner": "rolisola",
+  "branches": ["main", "develop", "Paralelo"]
 }
