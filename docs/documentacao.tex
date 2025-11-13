@@ -7,11 +7,7 @@
 \usepackage{geometry}
 \usepackage{hyperref}
 \usepackage{graphicx}
-\usepackage{svg}
 \usepackage{amsmath}
-\usepackage{subcaption}
-\usepackage{float}
-\usepackage{placeins}
 \usepackage{listings}
 \usepackage[strings]{underscore}
 
@@ -34,8 +30,8 @@
 \chead{\leftmark}
 \ohead{\pagemark}
 
-\title{Relatorio MADSC}
-\author{Vitor Marchini Rolisola, André Luis Dias Nogueira, Felipe Melchior de Britto}
+\title{Documentação de projeto mybc}
+\author{Vitor Marchini Rolisola, André Luis Dias Nogueira, Lucas Abdala Martins}
 \date{November 2025}
 
 \begin{document}
@@ -43,7 +39,7 @@
     \centering
     \includegraphics[width=0.75\textwidth]{src/logo_unesp.jpg}
     \vfill
-    \Huge\textbf{Documentação projeto \\ mybc}\\[1.5cm]
+    \Huge\textbf{Documentação de projeto \\ mybc}\\[1.5cm]
     \Large\textbf{Compiladores}\\[1.5cm]
     \vfill
     \begin{flushleft}
@@ -75,7 +71,7 @@ O desenvolvimento seguiu um processo incremental:
 
 \chapter{Fundamentos Teóricos}
 \section{Gramática e EBNF}
-A gramática adotada é equivalente \`a apresentada em aula, com níveis para \textit{expressão}, \textit{termo} e \textit{fator}. Em EBNF simplificada:
+A gramática adotada é equivalente à apresentada em aula, com níveis para \textit{expressão}, \textit{termo} e \textit{fator}. Em EBNF simplificada:
 \begin{align*}
     \langle Expressao \rangle &::= [\operatorname{+} \mid \operatorname{-}]\,\langle Termo \rangle\,\{\operatorname{+}\,\langle Termo \rangle \mid \operatorname{-}\,\langle Termo \rangle\} \\
     \langle Termo \rangle &::= \langle Fator \rangle\,\{\operatorname{*}\,\langle Fator \rangle \mid \operatorname{/}\,\langle Fator \rangle\} \\
@@ -90,7 +86,7 @@ Os diagramas sintáticos das aulas foram utilizados diretamente para guiar a rec
 Seguindo o material de \texttt{aula 3}, cada token é reconhecido por um autômato determinístico separado, implementado em funções como \texttt{isID}, \texttt{isNUM}, \texttt{isHEX} e \texttt{isROMAN}. O encadeamento dos autômatos na função \texttt{gettoken} garante que ambiguidades sejam resolvidas conforme a prioridade definida na especificação da linguagem.
 
 \section{Recursão e Padrão LL(1)}
-O parser segue padrão LL(1), lendo tokens da esquerda para a direita e construindo derivações mais \`a esquerda por meio de chamadas recursivas. O primeiro token é adiantado em \texttt{main.c}, e cada chamada de \texttt{expression}, \texttt{cmd} ou \texttt{match} garante que a condição LL(1) seja preservada.
+O parser segue padrão LL(1), lendo tokens da esquerda para a direita e construindo derivações mais à esquerda por meio de chamadas recursivas. O primeiro token é adiantado em \texttt{main.c}, e cada chamada de \texttt{expression}, \texttt{cmd} ou \texttt{match} garante que a condição LL(1) seja preservada.
 
 \section{Tabela de Símbolos e Pilha}
 Inspirados nas práticas das aulas sobre ambientes de execução, a implementação emprega:
