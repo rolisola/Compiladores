@@ -31,4 +31,4 @@ compact: veryclean
 extract:
 	mkdir -p extracted
 	tar zxvf mybc_grp9`date "+%Y%m%d"`.tar.gz -C ./extracted
-	mv mybc.tar.gz ./extracted
+	mv mybc_grp9`date "+%Y%m%d"`.tar.gz ./extracted

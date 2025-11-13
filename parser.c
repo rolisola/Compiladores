@@ -37,6 +37,12 @@ void mybc(void) {
 				answers++;
 				errors--;
 			}
+
+			//Verifica se pode vir mais instruções para salvar a quantidade de erros e não falhar na contagem de linhas
+			if (lookahead == ';' && errors >0) {
+				answers += errors;
+				errors = -1;
+			}
 	
 			//Caso tenha terminado a linha, checa quantas respostas e erros tiveram para compensar na contagem linhas/colunas
 			if (lookahead == '\n' && (errors >0 || answers >0)) {
