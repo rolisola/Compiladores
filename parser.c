@@ -143,7 +143,7 @@ void expression(void) {
 				case ';':
 					break;
 
-				default:
+				default: {
 
 					//Gera variável para armazenar o ID salvo em lexeme
 					char varname[MAXLEN+1];
@@ -158,6 +158,7 @@ void expression(void) {
 						//Caso não esteja atribuindo, usa-se seu valor salvo para o acumulador
 						/*Ação Semântica 9*/ acc = recall(varname); /**/
             		}
+				} break;
 			}
 
 			//Realização de multiplicação e divisão numéricas
