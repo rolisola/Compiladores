@@ -60,6 +60,17 @@
 \chapter{Introdução}
 Esta documentação descreve a calculadora interativa desenvolvida na disciplina de Compiladores, enfatizando a ligação entre as entregas do projeto e os tópicos apresentados em aula. A implementação foi baseada nos materiais de aula, especialmente os roteiros das aulas 3, 4, 5 e 10, que apresentam diagrama sintático, gramáticas em EBNF, construção de autômatos e evolução do parser.
 
+\section*{Resumo de Funcionalidades}
+\begin{itemize}
+    \item Avaliação de expressões aritméticas infixas com `+`, `-`, `*`, `/`.
+    \item Literais: decimal, octal (`0` prefixado), hexadecimal (`0x`/`0X`), ponto flutuante (inclui notação exponencial), numerais romanos clássicos com notação subtrativa.
+    \item Atribuição com operador `:=` e variável especial `ans` para último resultado.
+    \item Tratamento de erros com linha e coluna, recuperação básica de fluxo.
+    \item Conversão interna de numerais romanos via rotina dedicada (`rmntoi`).
+    \item Comandos de saída: `exit`, `quit`, `q`.
+    \item Empacotamento automático de fontes via alvo `make compact` (gera `.tar.gz`).
+\end{itemize}
+
 \chapter{Metodologia e Referencial}
 O desenvolvimento seguiu um processo incremental:
 \begin{enumerate}
@@ -131,10 +142,31 @@ $ ./mybc
 20
 x := 0x10 + 8;
 24
-y := ans / II;
-12
+MD;            # numeral romano (M=1000, D=500)
+1500
+y := ans / II; # uso de divisão com romano
+750
+ans + 1;
+751
 quit
 \end{lstlisting}
+
+\chapter{Empacotamento e Release}
+O projeto inclui um fluxo simples de empacotamento:
+\begin{enumerate}
+    \item \textbf{Build}: `make mybc` compila o executável.
+    \item \textbf{Compactação}: `make compact` gera arquivo `mybc_grp9_YYYYMMDD.tar.gz` com fontes e Makefile.
+    \item \textbf{Tag opcional}: em repositório Git, criar tag anotada (`git tag -a v1.0.0 -m "Release v1.0.0"`).
+    \item \textbf{Publicação}: anexar o `.tar.gz` à página de releases (GitHub) ou distribuir internamente.
+\end{enumerate}
+Para incluir coautores em commits, utilizar o trailer `Co-authored-by:` nas mensagens, conforme recomendação da plataforma de hospedagem.
+
+\chapter{Correções Recentes}
+\begin{itemize}
+    \item \textbf{Lexer de Romanos}: correção de loops que atribuíam resultado booleano de comparação a `lexeme[i]` (parênteses ausentes), causando perda de caracteres e avaliação incorreta (`MD` retornava 1000). Agora numerais são capturados integralmente e convertidos corretamente (e.g., `MD` → 1500, `CDXLIV` → 444).
+    \item \textbf{Documentação}: adicionada seção de release e resumo de funcionalidades.
+    \item \textbf{Exemplos}: sessão atualizada demonstrando uso de `ans` e numerais romanos.
+\end{itemize}
 
 \chapter{Testes e Garantia de Qualidade}
 Os planos de teste revisitam os cenários propostos no material de apoio:
@@ -146,5 +178,5 @@ Os planos de teste revisitam os cenários propostos no material de apoio:
 \end{itemize}
 
 \chapter{Conclusão}
-O projeto sintetiza os conceitos de gramáticas LL(1), autômatos, diagramas sintáticos, ações semânticas, pilhas e tabelas de símbolos estudados em aula.
+O projeto sintetiza os conceitos de gramáticas LL(1), autômatos, diagramas sintáticos, ações semânticas, pilhas e tabelas de símbolos estudados em aula. As evoluções recentes reforçam a importância de testes direcionados para validar a captura léxica de padrões e manter a consistência da avaliação semântica.
 \end{document}
