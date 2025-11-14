@@ -264,7 +264,7 @@ int isROMAN(FILE *tape) {
     if ((lexeme[i] = getc(tape)) == 'M') {
         i++;
         int j = 0;
-        while (lexeme[i] = getc(tape) == 'M' && j < 2) {
+        while ((lexeme[i] = getc(tape)) == 'M' && j < 2) {
             i++;
             j++;
         }
@@ -293,7 +293,7 @@ int isROMAN(FILE *tape) {
 
             // Resolve casos de D até DCCC
             int j = 0;
-            while (lexeme[i] = getc(tape) == 'C' && j < 3) {
+            while ((lexeme[i] = getc(tape)) == 'C' && j < 3) {
                 i++;
                 j++;
             }

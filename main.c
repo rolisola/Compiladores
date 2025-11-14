@@ -11,8 +11,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <main.h>
 #include <signal.h>
+#include <main.h>
 
 // Variáveis globais
 FILE *source;
