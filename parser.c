@@ -165,10 +165,6 @@ void expression(void) {
                 match(ANS);
                 break;
 
-            case '\n':
-            case ';':
-                break;
-
             default: {
 
                 // Gera variável para armazenar o ID salvo em lexeme
@@ -312,7 +308,7 @@ void match(int expected) {
         } else {
 
             // No caso de ser o fim da expressão, indica a incompletude da instrução aritmética
-            fprintf(stderr, "Instrução incompleta.\n");
+            fprintf(stderr, "Instrução incompleta. Faltou \"%s\".\n", (expected >= ID) ? token_string[expected - ID] : ((char[]){expected, '\0'}));
         }
         errors++;
     }
@@ -371,11 +367,13 @@ int rmntoi(char *string) {
     int size = strlen(string);
     int count = 0;
 
+    // Realiza a contagem da milhar
     while (count < size && string[count] == 'M') {
         numero += 1000;
         count++;
     }
 
+    // Realiza a contagem das centenas
     if (count < size && (string[count] == 'C' || string[count] == 'D')) {
 
         if (string[count] == 'C') {
@@ -416,6 +414,7 @@ int rmntoi(char *string) {
         }
     }
 
+    // Realiza a contagem das dezenas
     if (count < size && (string[count] == 'X' || string[count] == 'L')) {
 
         if (string[count] == 'X') {
@@ -456,6 +455,7 @@ int rmntoi(char *string) {
         }
     }
 
+    // Realiza a contagem das unidades
     if (count < size && (string[count] == 'I' || string[count] == 'V')) {
 
         if (string[count] == 'I') {
