@@ -4,45 +4,64 @@ Repositório para a disciplina de Compiladores do Bacharel de Ciências da Compu
 
 ## O que faz
 
-- Analisa expressões aritméticas
-- Suporta números em decimal, octal, hexadecimal e romano
-- Faz operações básicas: soma, subtração, multiplicação e divisão
-- Permite usar variáveis com atribuição (`:=`)
-- Mostra erros com linha e coluna quando tem algo errado
+- Analisa e avalia expressões aritméticas infixas
+- Suporta literais: decimal (`42`), octal (`0` seguido de octais, ex.: `077`), hexadecimal (`0xFF`/`0XFF`), ponto flutuante (`3.14`, `.5`, `1e3`, `2.5E-2`) e romano clássico (`MD`, `CDXLIV`, `MMXXV`)
+- Operações: soma `+`, subtração `-`, multiplicação `*`, divisão `/`
+- Variáveis com atribuição (`:=`) e leitura posterior; símbolo especial `ans` para o último resultado
+- Mensagens de erro com linha e coluna; comandos de saída `exit`, `quit` ou `q`
 
 ## Como usar
 
 Compilar:
-```
+ 
+```bash
 make mybc
 ```
 
 Executar:
-```
+ 
+```bash
 ./mybc
 ```
 
-Para sair: `exit`, `quit` ou `q`
+Sair: `exit`, `quit` ou `q`.
 
-## Arquivos
 
-- `main.c` - inicializa o programa
-- `lexer.c` - analisador léxico (identifica tokens)
-- `parser.c` - analisador sintático (valida expressões)
-- `tokens.h` - definição dos tokens
-- `lexer.h`, `parser.h`, `main.h` - headers
-- `Makefile` - automação da compilação
+### Exemplos rápidos
+
+```text
+2 + 3 * 4;            -> 14
+x := 10; y := x + 5;  -> (imprime 10 na primeira, 15 na segunda)
+0xFF + 077;           -> 318
+3.14e1 + .5;          -> 31.9
+MD;                   -> 1500
+ans + 1;              -> 1501
+```
+
+## Estrutura
+
+- `main.c` – inicializa I/O e laço de leitura
+- `lexer.c` – analisador léxico (tokens: `ID`, `DEC`, `OCT`, `HEX`, `FLT`, `ROMAN`, `ASGN`, `ANS`, `EXIT`, `QUIT`)
+- `parser.c` – analisador sintático/semântico (parser LL(1), avaliação e armazenamento)
+- `tokens.h` – enumeração dos tokens
+- `lexer.h`, `parser.h`, `main.h` – interfaces
+- `Makefile` – automação de build/limpeza/empacotamento
+- `docs/documentacao.pdf` – documentação do projeto (gerada a partir de LaTeX)
 
 ## Comandos do Makefile
 
-- `make mybc` - compila o projeto
-- `make clean` - remove arquivos objeto
-- `make veryclean` - remove tudo (objetos, executável, temporários)
-- `make compact` - compacta o projeto em tar.gz com a data
+- `make mybc` – compila o projeto
+- `make clean` – remove arquivos objeto (`*.o`)
+- `make veryclean` – remove objetos, executável e temporários
+- `make compact` – gera um tar.gz datado com os fontes
 
-## Observações
+O `compact` cria um arquivo no formato `mybc_grp9_YYYYMMDD.tar.gz` contendo `Makefile` e os arquivos `*.c`/`*.h` do diretório raiz.
 
-No arquivo Makefile, terão automações para a compilação do projeto, bem como a extração e compactação para zips .tar.gz. Erros são marcados com linha e coluna, a fim de facilitar na correção de código. Fora feito o tratamento de setas e o tratamento do comando Ctrl+C a fim de adicionar funcionalidades extras a nossa calculadora.
+## Notas
+
+- Números romanos seguem a gramática clássica com notação subtrativa (ex.: `CM`, `XL`, `IV`).
+- `ans` (ou `ANS`) retorna o último resultado avaliado.
+- Erros de sintaxe apontam linha e coluna para facilitar a correção.
 
 ## Autores
 
